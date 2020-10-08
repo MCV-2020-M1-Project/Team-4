@@ -4,10 +4,16 @@ import pickle
 
 qsd1file = open('qsd1_w1/gt_corresps.pkl', 'rb')
 qsd1 = pickle.load(qsd1file)
+bbddfile = open('BBDD/relationships.pkl', 'rb')
+bbdd1 = pickle.load(bbddfile)
+
+range_qsd1=len(qsd1)
+range_bbdd=len(bbdd1)
+
 # TASK 1 Create Museum and query image descriptors (BBDD & QS1)
 bbdd = {}  # Dictionary with the histogram of each image in the bbdd folder
 qs1 = {}  # Dictionary with the histogram of each image in the qsd1 folder
-for i in range(30):
+for i in range(range_qsd1):
     if i < 10:
         image = '0000' + str(i) + '.jpg'
     else:
@@ -17,7 +23,7 @@ for i in range(30):
     hist = cv.calcHist([img], [0], None, [256], [0, 256])
     qs1[i] = hist
 
-for i in range(287):
+for i in range(range_bbdd):
     if i < 10:
         image = 'bbdd_0000' + str(i) + '.jpg'
     elif i < 100:
