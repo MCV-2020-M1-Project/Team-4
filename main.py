@@ -59,7 +59,10 @@ def l1distance(h1, h2):  # L1 distance
 def x2distance(h1, h2):  # x^2 distance
     sum = 0
     for k in range(256):
-        dif = ((h1[k] - h2[k])**2)/(h1[k] + h2[k])
+        if (h1[k] + h2[k]) == 0:
+            dif = 0
+        else:
+            dif = ((h1[k] - h2[k])**2)/(h1[k] + h2[k])
         sum += dif
 
     return sum
