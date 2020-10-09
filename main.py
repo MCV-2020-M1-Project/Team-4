@@ -43,7 +43,7 @@ def create_hists(image):
     return np.concatenate((s1_hist, s2_hist, s3_hist, s4_hist), axis=None)
 
 
-def qs_load():
+def qs_load(): #Legacy
     with open('ddbb.txt', 'w') as out_file:
         for i in range(range_qsd1):
             if i < 10:
@@ -59,8 +59,8 @@ def qs_load():
                     out_file.write('\t')
             out_file.write('\n')
 
-# Old funtion,
-def bbdd_load():
+
+def bbdd_load():# Legacy
     for i in range(range_bbdd):
         if i < 10:
             image = 'BBDD/bbdd_0000' + str(i) + '.jpg'
