@@ -22,28 +22,36 @@ qs1 = [] # Array (np.array) with the histograma of each image in the qsd1 folder
 
 
 def create_hists(image):
-    img = cv.imread(image)
-    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    imgRaw = cv.imread(image)
+    img = cv.cvtColor(imgRaw, cv.COLOR_BGR2GRAY)
+    imgRaw = cv.cvtColor(imgRaw, cv.COLOR_BGR2Lab)
     height, width = img.shape
     # Cut the image in 4
-    height_cutoff = height // 4
-    # width_cutoff = width // 4
-    s1 = img[:height_cutoff, :]
-    s2 = img[height_cutoff:height_cutoff * 2, :]
-    s3 = img[height_cutoff * 2:height_cutoff * 3, :]
-    s4 = img[height_cutoff * 3:, :]
-    s1_hist = np.array(cv.calcHist([s1], [0], None, [256], [0, 256]))
-    s2_hist = np.array(cv.calcHist([s2], [0], None, [256], [0, 256]))
-    s3_hist = np.array(cv.calcHist([s3], [0], None, [256], [0, 256]))
-    s4_hist = np.array(cv.calcHist([s4], [0], None, [256], [0, 256]))
-    cv.normalize(s1_hist, s1_hist, alpha=0, beta=1, norm_type=cv.NORM_MINMAX)
-    cv.normalize(s2_hist, s2_hist, alpha=0, beta=1, norm_type=cv.NORM_MINMAX)
-    cv.normalize(s3_hist, s3_hist, alpha=0, beta=1, norm_type=cv.NORM_MINMAX)
-    cv.normalize(s4_hist, s4_hist, alpha=0, beta=1, norm_type=cv.NORM_MINMAX)
-    return np.concatenate((s1_hist, s2_hist, s3_hist, s4_hist), axis=None)
+    column = 4
+    row = 8
+    height_cutoff = height // row
+    width_cutoff = width // column
+    outputArray = []
+    for c in range(column):
+        for r in range(row):
+            s1 = img[r*height_cutoff:(r+1)*height_cutoff, c*width_cutoff: (c+1)*width_cutoff]
+            s1_hist = np.array(cv.calcHist([s1], [0], None, [256], [0, 256]))
+            cv.normalize(s1_hist, s1_hist, alpha=0, beta=1, norm_type=cv.NORM_MINMAX)
+            outputArray = np.concatenate((outputArray,s1_hist), axis=None)
 
 
-def qs_load(): #Legacy
+    dimensions = 2
+    for d in range(dimensions):
+        for c in range(column):
+            for r in range(row):
+                s1 = imgRaw[r*height_cutoff:(r+1)*height_cutoff, c*width_cutoff: (c+1)*width_cutoff, d]
+                s1_hist = np.array(cv.calcHist([s1], [0], None, [256], [0, 256]))
+                cv.normalize(s1_hist, s1_hist, alpha=0, beta=1, norm_type=cv.NORM_MINMAX)
+                outputArray = np.concatenate((outputArray, s1_hist), axis=None)
+    return outputArray
+
+
+def qs_load():
     with open('ddbb.txt', 'w') as out_file:
         for i in range(range_qsd1):
             if i < 10:
@@ -59,8 +67,8 @@ def qs_load(): #Legacy
                     out_file.write('\t')
             out_file.write('\n')
 
-
-def bbdd_load():# Legacy
+# Old funtion,
+def bbdd_load():
     for i in range(range_bbdd):
         if i < 10:
             image = 'BBDD/bbdd_0000' + str(i) + '.jpg'
@@ -96,7 +104,7 @@ def load_porcessed(path):
 
 def euclidean(h1, h2):  # Euclidean distance
     sum = 0
-    for k in range(256 * 4):
+    for k in range(len(h1)):
         dif = (h1[k] - h2[k]) ** 2
         sum += dif
 
@@ -105,7 +113,7 @@ def euclidean(h1, h2):  # Euclidean distance
 
 def l1distance(h1, h2):  # L1 distance
     sum = 0
-    for k in range(256*4):
+    for k in range(len(h1)):
         dif = abs(h1[k] - h2[k])
         sum += dif
     return sum
@@ -113,7 +121,7 @@ def l1distance(h1, h2):  # L1 distance
 
 def x2distance(h1, h2):  # x^2 distance
     sum = 0
-    for k in range(256*4):
+    for k in range(len(h1)):
         if (h1[k] + h2[k]) == 0:
             dif = 0
         else:
