@@ -124,6 +124,6 @@ class BackgroundRemove(object):
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-        return image_crop
+        return image_crop, mask
 
 
