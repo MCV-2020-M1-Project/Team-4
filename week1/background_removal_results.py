@@ -1,15 +1,12 @@
 import cv2
 import imutils
-import os
-import sys
 import math
 import pickle
 import numpy as np
 import ml_metrics as metrics
-import glob
 import time
-import pandas as pd
 from docopt import docopt
+import statistics as stats
 
 
 def create_hists(image):
@@ -28,12 +25,6 @@ def create_hists(image):
     height_cutoff = height // row
     width_cutoff = width // column
     outputArray = []
-    #for c in range(column):
-    #    for r in range(row):
-    #        s1 = img[r * height_cutoff:(r + 1) * height_cutoff, c * width_cutoff: (c + 1) * width_cutoff]
-    #        s1_hist = np.array(cv.calcHist([s1], [0], None, [32], [0, 256]))
-    #        cv.normalize(s1_hist, s1_hist, alpha=0, beta=1, norm_type=cv.NORM_MINMAX)
-    #        outputArray = np.concatenate((outputArray, s1_hist), axis=
 
     dimensions = 3
     for d in range(dimensions):
@@ -44,6 +35,14 @@ def create_hists(image):
                 cv2.normalize(s1_hist, s1_hist, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
                 outputArray = np.concatenate((outputArray, s1_hist), axis=None)
     return outputArray
+
+def rgb_hist_3d(image, bins=8, mask=None):
+    
+    if count == 0:
+        image = cv2.imread(image)
+    hist = cv2.calcHist([image], [0, 1, 2], mask, [bins, bins, bins], [0, 256, 0, 256, 0, 256])
+    hist = cv2.normalize(hist, hist)
+    return hist.flatten()
 
 
 def openfile():
@@ -230,6 +229,7 @@ class BackgroundRemove(object):
             cv2.imshow('Image Result', image_crop)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
+        
 
         return image_crop, mask
 
@@ -250,7 +250,6 @@ class BackgroundRemove(object):
         return precision, recall, f1_score
     
     
-    
 # TASK 2 Implement / compute similarity measures to compare images
 
 
@@ -268,7 +267,7 @@ def x2distance(h1, h2):  # x^2 distance
     l= len(h1)
     for k in range(l):
         if k == l/2:
-            if (l*1)/2 < result:
+            if (l*0.12)/2 < result:
                 result = l
                 return result
         h11 = h1[k]
@@ -293,7 +292,7 @@ if __name__ == "__main__":
     qs2 = []  # Array (np.array) with the histogram of each image in the qsd1 folder
     bbdd = []  # Array (np.array) with the histogram of each image in the bbdd folder 
     qs2 = []  # Array (np.array) with the histogram of each image in the qsd1 folder
-    mask = [] # Array (np.array) with the histogram of each image in the mask folder
+    maskbis = [] # Array (np.array) with the histogram of each image in the mask folder
     count=0
     
     
@@ -326,6 +325,7 @@ if __name__ == "__main__":
         count=1
         qs = cv2.imread(image)
         qs, mask = BackgroundRemove.remove_background(qs,2)
+        maskbis.append(mask)
         qs2.append(create_hists(qs))
         count=0
 
@@ -350,12 +350,14 @@ if __name__ == "__main__":
             image = 'qsd2_w1/000' + str(i) + '.png'
            
         mask = cv2.imread(image)
+        mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
         mask2.append(mask)
+    mask2 = mask2[30:]
         
     print("Loaded")
     print("Finding similarities")
 
-    for i in range(range_qsd1):
+    for i in range(range_qsd2):
         h1 = qs2[i]
         distance = {}
         for key in range(range_bbdd1):
@@ -372,9 +374,9 @@ if __name__ == "__main__":
         # print('The image that corresponds to the query image nº ', i, ' is ', qsd1[i])
         # print('The image with the lowest euclidean distance is ', result)
 
-    score_k1 = metrics.mapk(qsd1, result_1k, 1) * 100
-    score_k5 = metrics.mapk(qsd1, result_5k, 5) * 100
-    score_k10 = metrics.mapk(qsd1, result_10k, 10) * 100
+    score_k1 = metrics.mapk(qsd2, result_1k, 1) * 100
+    score_k5 = metrics.mapk(qsd2, result_5k, 5) * 100
+    score_k10 = metrics.mapk(qsd2, result_10k, 10) * 100
 
     print('Score K1 = ', score_k1, '%')
     print('Score K5 = ', score_k5, '%')
@@ -382,4 +384,24 @@ if __name__ == "__main__":
     t = time.time()-t
     print("time needed to complete sequence: ", t)
     print("for each image (aprox): ", t / range_qsd1)
-                
+    
+ '''   
+ Arreglar!!!!
+ 
+ 
+    precision = []
+    recall = []
+    score_f1 = []
+    for i in range(range_qsd2):
+        pre, rec, f1 = BackgroundRemove.evaluate_mask(mask2[i], maskbis[i])
+        precision.append(pre)
+        recall.append(rec)
+        score_f1.append(f1)
+        
+
+    
+    a = stats.median(precision)
+    b = stats.median(recall)
+    c = stats.median(score_f1)
+
+'''    
