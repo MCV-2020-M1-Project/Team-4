@@ -1,8 +1,8 @@
 """
 
 Usage:
-  cbir_def.py <weekNumber> <teamNumber> <winEval> <querySet> <MethodNumber> [--testDir=<td>] 
-  cbir_def.py -h | --help
+  cbir.py <weekNumber> <teamNumber> <winEval> <querySet> <MethodNumber> [--testDir=<td>] 
+  cbir.py -h | --help
 Options:
   --testDir=<td>        Directory with the test images & masks [default: /home/dlcv/DataSet/fake_test]        ###Aixo del dir no ho tinc clar###
   
