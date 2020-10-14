@@ -51,7 +51,7 @@ class BackgroundRemove(object):
         gaussian = cv2.GaussianBlur(resize, (3, 3), 0)
         sharpness = cv2.filter2D(gaussian, cv2.CV_8U, np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]]))
         threshold = cv2.threshold(sharpness, 90, 255, cv2.THRESH_BINARY_INV)[1]
-        morphological = BackgroundRemove.apply_morph(threshold, morph_type)
+        morphological = BackgroundRemove.apply_morph(threshold, 3)
 
         # Detect contours
         (contours, hierarchy) = cv2.findContours(morphological, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -64,6 +64,14 @@ class BackgroundRemove(object):
             cv2.imshow('Image Tresh', morphological)
             cv2.imshow('Mask', mask)
             cv2.imwrite(str(BackgroundRemove.__count) + ".jpg", gray)
+
+            cv2.imwrite("gray.jpg", gray)
+            cv2.imwrite("gaussian.jpg", gaussian)
+            cv2.imwrite("sharpness.jpg", sharpness)
+            cv2.imwrite("treshold.jpg", threshold)
+            cv2.imwrite("morph.jpg", morphological)
+            cv2.imwrite("result.jpg", BackgroundRemove.crop_with_mask(image, mask))
+
             BackgroundRemove.__count = BackgroundRemove.__count + 1
 
             cv2.waitKey(0)
@@ -90,6 +98,15 @@ class BackgroundRemove(object):
                 [0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0]
             ], dtype=np.uint8), iterations=3)
+
+        if morph_type == 3:
+            image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, np.array([
+                [0, 0, 1, 0, 0],
+                [0, 0, 1, 0, 0],
+                [1, 1, 1, 1, 1],
+                [0, 0, 1, 0, 0],
+                [0, 0, 1, 0, 0]
+            ], dtype=np.uint8), iterations=15)
 
         return image
 
@@ -126,4 +143,14 @@ class BackgroundRemove(object):
 
         return image_crop, mask
 
+    @staticmethod
+    def evaluate_mask(original_mask, generated_mask):
+        tp = np.sum(np.logical_and(original_mask, generated_mask))
+        fp = np.sum(np.logical_and(np.logical_not(original_mask), generated_mask))
+        fn = np.sum(np.logical_and(original_mask, np.logical_not(generated_mask)))
 
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        f1_score = 2 * ((precision * recall) / (precision + recall))
+
+        return precision, recall, f1_score
