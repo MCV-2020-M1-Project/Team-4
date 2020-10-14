@@ -82,6 +82,27 @@ class BackgroundRemove(object):
 
         return mask
 
+    # Method3 Color treshold
+    @staticmethod
+    def method3(image, show_output=False):
+
+        # Convert to gray
+        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        threshold = cv2.threshold(gray, 75, 255, cv2.THRESH_BINARY_INV)[1]
+        (contours, hierarchy) = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        mask = BackgroundRemove.generate_mask(image, contours, 1)
+
+        if show_output:
+            cv2.imshow('GAU', gray)
+            cv2.imshow('Treshold', threshold)
+            cv2.imshow('Mask', mask)
+
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+        return mask
+
     # Apply to a image different morphological transformations and returns this one
     @staticmethod
     def apply_morph(image, morph_type):
@@ -134,10 +155,15 @@ class BackgroundRemove(object):
 
     # Main method to remove a background, returns the image cropped and the mask
     @staticmethod
-    def remove_background(image, show_output=False):
+    def remove_background(image, method=1, show_output=False):
 
-        # Apply the best method (Method 2)
-        mask = BackgroundRemove.method2(image, 2, show_output)
+        # Apply method to generate mask
+        if method == 1:# Edges
+            mask = BackgroundRemove.method1(image, show_output)
+        elif method == 2:# Morphological
+            mask = BackgroundRemove.method2(image, 2, show_output) #
+        elif method == 3:# Threshold
+            mask = BackgroundRemove.method3(image, show_output)
 
         # Generate image cropped
         image_crop = BackgroundRemove.crop_with_mask(image, mask)
