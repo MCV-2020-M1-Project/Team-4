@@ -5,6 +5,11 @@ import imutils
 
 # Class to remove backgrounds and evaluate masks
 class BackgroundRemove(object):
+
+    EDGES = 1
+    MORPH = 2
+    TRESH = 3
+
     __count = 1
 
     # Method 1 using Edge detector
@@ -158,11 +163,11 @@ class BackgroundRemove(object):
     def remove_background(image, method=1, show_output=False):
 
         # Apply method to generate mask
-        if method == 1:# Edges
+        if method == BackgroundRemove.EDGES:# Edges
             mask = BackgroundRemove.method1(image, show_output)
-        elif method == 2:# Morphological
+        elif method == BackgroundRemove.MORPH:# Morphological
             mask = BackgroundRemove.method2(image, 2, show_output) #
-        elif method == 3:# Threshold
+        elif method == BackgroundRemove.TRESH:# Threshold
             mask = BackgroundRemove.method3(image, show_output)
 
         # Generate image cropped

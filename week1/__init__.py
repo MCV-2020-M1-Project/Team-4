@@ -1,0 +1,1 @@
+from week1.background_removal import BackgroundRemove
