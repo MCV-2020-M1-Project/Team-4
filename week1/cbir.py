@@ -1,8 +1,8 @@
 """
 
 Usage:
-  cbir_def.py <weekNumber> <teamNumber> <winEval> <querySet> <MethodNumber> [--testDir=<td>] 
-  cbir_def.py -h | --help
+  cbir.py <weekNumber> <teamNumber> <winEval> <querySet> <MethodNumber> [--testDir=<td>] 
+  cbir.py -h | --help
 Options:
   --testDir=<td>        Directory with the test images & masks [default: /home/dlcv/DataSet/fake_test]        ###Aixo del dir no ho tinc clar###
   
@@ -72,19 +72,6 @@ def rgb_hist_3d(image, bins=8, mask=None):
     hist = cv.normalize(hist, hist)
     return hist.flatten()
 
-# Old funtion,
-def bbdd_load():
-    bbdd = []
-    for i in range(range_bbdd):
-        if i < 10:
-            image = 'BBDD/bbdd_0000' + str(i) + '.jpg'
-        elif i < 100:
-            image = 'BBDD/bbdd_000' + str(i) + '.jpg'
-        else:
-            image = 'BBDD/bbdd_00' + str(i) + '.jpg'
-        bbdd.append(create_hists(image))
-            
-    return bbdd
 
 # TASK 2 Implement / compute similarity measures to compare images
 
@@ -130,9 +117,9 @@ def histogram_sequence():
     
     for i in range(range_qsd1):
         if i < 10:
-            image = 'qsd1_w1/0000' + str(i) + '.jpg'
+            image = 'qsd{}_w{}/0000'.format(query_set, week) + str(i) + '.jpg'
         else:
-            image = 'qsd1_w1/000' + str(i) + '.jpg'
+            image = 'qsd{}_w{}/000'.format(query_set, week) + str(i) + '.jpg'
     
         if method == 1:
             qs1.append(create_hists(image))

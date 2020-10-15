@@ -1,4 +1,5 @@
 .idea
-week1/BBDD
-week1/qsd1_w1
-week1/qsd2_w1
+*.jpg
+*.png
+*.txt
+*.pkl
