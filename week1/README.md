@@ -8,7 +8,7 @@ pip install -r requirements.txt
 """
 
 Usage:
-  cbir.py <weekNumber> teamNumber winEval querySet MethodNumber distanceMeasure
+  cbir.py |weekNumber| |teamNumber| |winEval| |querySet| |MethodNumber| |distanceMeasure|
   cbir.py -h | --help
   
   weekNumber --> Number of the week
