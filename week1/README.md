@@ -30,7 +30,7 @@ Usage:
 """
 
 Usage:
-  background_removal_results.py weekNumber teamNumber winEval querySet MethodNumber distanceMeasure 
+  background_removal_results.py |weekNumber| |teamNumber| |winEval| |querySet| |MethodNumber| |distanceMeasure| 
   background_removal_results.py -h | --help
   
   weekNumber --> Number of the week
