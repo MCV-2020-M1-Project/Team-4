@@ -33,43 +33,46 @@ def openfile():
 
 
 def create_hists(image):
-    imgRaw = cv.imread(image)
-    height, width, dimensions = imgRaw.shape
+    """
+    This function load an image, filtered with some basic operations and calculate some specific histograms
+    :param image: relative path of image
+    :return: array with histograms concatenated
+    """
+    img = cv.imread(image)
+    height, width, dimensions = img.shape
     if height > 250:
         factor = height//250
-        imgRaw = cv.resize(imgRaw, (width//factor, height//factor), interpolation=cv.INTER_AREA)
-    img = cv.cvtColor(imgRaw, cv.COLOR_BGR2GRAY)
-    imgRaw = cv.cvtColor(imgRaw, cv.COLOR_BGR2Lab)
-    height, width = img.shape
-    # Cut the image in 4
+        img = cv.resize(img, (width//factor, height//factor), interpolation=cv.INTER_AREA)
+    img = cv.cvtColor(img, cv.COLOR_BGR2Lab)
+    height, width, dimensions = img.shape
+
+    # Number of divisions
     column = 4
     row = 16
     height_cutoff = height // row
     width_cutoff = width // column
-    outputArray = []
-    #for c in range(column):
-    #    for r in range(row):
-    #        s1 = img[r * height_cutoff:(r + 1) * height_cutoff, c * width_cutoff: (c + 1) * width_cutoff]
-    #        s1_hist = np.array(cv.calcHist([s1], [0], None, [32], [0, 256]))
-    #        cv.normalize(s1_hist, s1_hist, alpha=0, beta=1, norm_type=cv.NORM_MINMAX)
-    #        outputArray = np.concatenate((outputArray, s1_hist), axis=
+    output_array = []
 
-    dimensions = 3
     for d in range(dimensions):
+        # Adaptable number of bins, to give each dimension more or less weight in the final evaluation
+        if d == 0:
+            bins = 16
+        else:
+            bins = 32
         for c in range(column):
             for r in range(row):
-                s1 = imgRaw[r * height_cutoff:(r + 1) * height_cutoff, c * width_cutoff: (c + 1) * width_cutoff, d]
-                s1_hist = np.array(cv.calcHist([s1], [0], None, [32], [0, 256]))
-                cv.normalize(s1_hist, s1_hist, alpha=0, beta=1, norm_type=cv.NORM_MINMAX)
-                outputArray = np.concatenate((outputArray, s1_hist), axis=None)
-    return outputArray
+                s1 = img[r * height_cutoff:(r + 1) * height_cutoff, c * width_cutoff: (c + 1) * width_cutoff, d]
+                s1_hist = np.array(cv.calcHist([s1], [0], None, [bins], [0, 256]))
+                cv.normalize(s1_hist, s1_hist)
+                output_array = np.concatenate((output_array, s1_hist), axis=None)
+    return output_array
 
 
 def rgb_hist_3d(image, bins=8, mask=None):
     
     imgRaw = cv.imread(image)
     hist = cv.calcHist([imgRaw], [0, 1, 2], mask, [bins, bins, bins], [0, 256, 0, 256, 0, 256])
-    hist = cv.normalize(hist, hist)
+    cv.normalize(hist, hist)
     return hist.flatten()
 
 
