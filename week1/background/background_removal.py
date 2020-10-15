@@ -17,7 +17,7 @@ class BackgroundRemove(object):
     def method1(image, show_output=False):
 
         # Convert to gray
-        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Resize
         resize = imutils.resize(gray, width=300)
@@ -49,7 +49,7 @@ class BackgroundRemove(object):
     def method2(image, morph_type=2, show_output=False):
 
         # Convert to gray
-        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Resize
         resize = imutils.resize(gray, width=500)
@@ -92,7 +92,7 @@ class BackgroundRemove(object):
     def method3(image, show_output=False):
 
         # Convert to gray
-        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         threshold = cv2.threshold(gray, 75, 255, cv2.THRESH_BINARY_INV)[1]
         (contours, hierarchy) = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
