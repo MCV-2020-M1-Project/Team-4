@@ -10,8 +10,6 @@ class BackgroundRemove(object):
     MORPH = 2
     THRES = 3
 
-    __count = 1
-
     # Method 1 using Edge detector
     @staticmethod
     def method1(image, show_output=False):
@@ -71,16 +69,6 @@ class BackgroundRemove(object):
             cv2.imshow('Image', resize)
             cv2.imshow('Image Tresh', morphological)
             cv2.imshow('Mask', mask)
-            cv2.imwrite(str(BackgroundRemove.__count) + ".jpg", gray)
-
-            cv2.imwrite("gray.jpg", gray)
-            cv2.imwrite("gaussian.jpg", gaussian)
-            cv2.imwrite("sharpness.jpg", sharpness)
-            cv2.imwrite("treshold.jpg", threshold)
-            cv2.imwrite("morph.jpg", morphological)
-            cv2.imwrite("result.jpg", BackgroundRemove.crop_with_mask(image, mask))
-
-            BackgroundRemove.__count = BackgroundRemove.__count + 1
 
             cv2.waitKey(0)
             cv2.destroyAllWindows()
