@@ -19,9 +19,6 @@ Usage:
   <distanceMeasure> --> 1: Euclidean distance, 2: x^2 distance
   
   Example of use --> python cbir.py 1 04 0 1 1 2
-Options:
-  --testDir=<td>        Directory with the test images & masks [default: /home/dlcv/DataSet/fake_test]        ###Aixo del dir no ho tinc clar###
-  
 """
 
 ### Execute QSD2
@@ -39,10 +36,7 @@ Usage:
   <distanceMeasure> --> 1: Euclidean distance, 2: x^2 distance
   
   Example of use --> python background_removal_results.py 1 04 0 2 2 1
-          
-Options:
-  --testDir=<td>        Directory with the test images & masks [default: /home/dlcv/DataSet/fake_test]        ###Aixo del dir no ho tinc clar###
-  
+
 """
 
 
