@@ -150,9 +150,9 @@ if __name__ == "__main__":
 
     precision, recall, score_f1 = stadistics_mask()
     
-    print('Precision= ',stats.median(precision)*100 , '%')
-    print('Recall = ', stats.median(recall)*100, '%')
-    print('Score_f1 = ', stats.median(score_f1)*100, '%')
+    print('Precision= ',stats.mean(precision)*100 , '%')
+    print('Recall = ', stats.mean(recall)*100, '%')
+    print('Score_f1 = ', stats.mean(score_f1)*100, '%')
     
     t = time.time() - t
     print("time needed to complete sequence: ", t)
