@@ -158,7 +158,7 @@ class BackgroundRemove(object):
         cropped_img = image[rect[1]:(rect[1] + rect[3]), rect[0]:(rect[0] + rect[2])]
         return cropped_img
 
-    # Main method to remove a background, returns the image cropped and the mask
+    # Main method to remove a query_images, returns the image cropped and the mask
     @staticmethod
     def remove_background(image, method=1, show_output=False):
 

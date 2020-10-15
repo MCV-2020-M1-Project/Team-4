@@ -1,6 +1,6 @@
 import cv2
 
-from background import BackgroundRemove
+from query_images import BackgroundRemove
 
 N_IMAGES = 30
 

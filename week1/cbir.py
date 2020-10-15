@@ -8,18 +8,14 @@ Options:
   
 """
 
-
-import os
-import sys
-import cv2 as cv
-import math
 import pickle
-import numpy as np
-import ml_metrics as metrics
-import glob
 import time
-import pandas as pd
+import cv2
+
+import ml_metrics as metrics
 from docopt import docopt
+
+from query_images import HistogramGenerator, HistogramDistance
 
 
 def openfile():
@@ -30,81 +26,6 @@ def openfile():
     bbdd1 = pickle.load(bbddfile)
     
     return qsd1, bbdd1
-
-
-def create_hists(image):
-    """
-    This function load an image, filtered with some basic operations and calculate some specific histograms
-    :param image: relative path of image
-    :return: array with histograms concatenated
-    """
-    img = cv.imread(image)
-    height, width, dimensions = img.shape
-    if height > 250:
-        factor = height//250
-        img = cv.resize(img, (width//factor, height//factor), interpolation=cv.INTER_AREA)
-    img = cv.cvtColor(img, cv.COLOR_BGR2Lab)
-    height, width, dimensions = img.shape
-
-    # Number of divisions
-    column = 4
-    row = 16
-    height_cutoff = height // row
-    width_cutoff = width // column
-    output_array = []
-
-    for d in range(dimensions):
-        # Adaptable number of bins, to give each dimension more or less weight in the final evaluation
-        if d == 0:
-            bins = 16
-        else:
-            bins = 32
-        for c in range(column):
-            for r in range(row):
-                s1 = img[r * height_cutoff:(r + 1) * height_cutoff, c * width_cutoff: (c + 1) * width_cutoff, d]
-                s1_hist = np.array(cv.calcHist([s1], [0], None, [bins], [0, 256]))
-                cv.normalize(s1_hist, s1_hist)
-                output_array = np.concatenate((output_array, s1_hist), axis=None)
-    return output_array
-
-
-def rgb_hist_3d(image, bins=8, mask=None):
-    
-    imgRaw = cv.imread(image)
-    hist = cv.calcHist([imgRaw], [0, 1, 2], mask, [bins, bins, bins], [0, 256, 0, 256, 0, 256])
-    cv.normalize(hist, hist)
-    return hist.flatten()
-
-
-# TASK 2 Implement / compute similarity measures to compare images
-
-
-def euclidean(h1, h2):  # Euclidean distance
-    result = 0
-    for k in range(len(h1)):
-        dif = (h1[k] - h2[k]) ** 2
-        result += dif
-
-    return math.sqrt(result)
-
-
-def x2distance(h1, h2):  # x^2 distance
-    result = 0
-    l= len(h1)
-    for k in range(l):
-        if k == l/2:
-            if (l*0.12)/2 < result:
-                result = l
-                return result
-        h11 = h1[k]
-        h22 = h2[k]
-        if (h11 + h22) == 0:
-            dif = 0
-        else:
-            dif = ((h11 - h22) ** 2) / (h11 + h22)
-        result += dif
-
-    return result
 
 
 def histogram_sequence():
@@ -119,28 +40,20 @@ def histogram_sequence():
     print("Creating image descriptors...")
     
     for i in range(range_qsd1):
-        if i < 10:
-            image = 'qsd{}_w{}/0000'.format(query_set, week) + str(i) + '.jpg'
-        else:
-            image = 'qsd{}_w{}/000'.format(query_set, week) + str(i) + '.jpg'
+        image = cv2.imread('qsd{}_w{}/{:05d}.jpg'.format(query_set, week, i))
     
         if method == 1:
-            qs1.append(create_hists(image))
+            qs1.append(HistogramGenerator.create_hists(image))
         elif method == 2:
-            qs1.append(rgb_hist_3d(image))
+            qs1.append(HistogramGenerator.rgb_hist_3d(image))
 
     for i in range(range_bbdd):
-        if i < 10:
-            image = 'BBDD/bbdd_0000' + str(i) + '.jpg'
-        elif i < 100:
-            image = 'BBDD/bbdd_000' + str(i) + '.jpg'
-        else:
-            image = 'BBDD/bbdd_00' + str(i) + '.jpg'
+        image = cv2.imread('BBDD/bbdd_{:05d}.jpg'.format(i))
             
         if method == 1:
-            bbdd.append(create_hists(image))
+            bbdd.append(HistogramGenerator.create_hists(image))
         elif method == 2:
-            bbdd.append(rgb_hist_3d(image))
+            bbdd.append(HistogramGenerator.rgb_hist_3d(image))
         
         
     print("Loaded")
@@ -150,9 +63,9 @@ def histogram_sequence():
         h1 = qs1[i]
         distance = {}
         for key in range(range_bbdd):
-            distance[key] = x2distance(h1, bbdd[key])
-            #print(distance[key])
+            distance[key] = HistogramDistance.x2distance(h1, bbdd[key])
             min_val = min(distance.values())
+
         x = sorted(distance, key=distance.get, reverse=False)[:5]
         result_5k.append(x)
         result = [key for key, value in distance.items() if value == min_val]
@@ -196,5 +109,4 @@ if __name__ == "__main__":
     bbdd = []  # Array (np.array) with the histogram of each image in the bbdd folder 
     qs1 = []  # Array (np.array) with the histogram of each image in the qsd1 folder
 
-    a = histogram_sequence()
-    
+    histogram_sequence()
