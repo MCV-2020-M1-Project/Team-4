@@ -1,11 +1,18 @@
 """
 
 Usage:
-  cbir.py <weekNumber> <teamNumber> <winEval> <querySet> <MethodNumber> [--testDir=<td>] 
+  cbir.py <weekNumber> <teamNumber> <winEval> <querySet> <MethodNumber> <distanceMeasure> [--testDir=<td>] 
   cbir.py -h | --help
-Options:
-  --testDir=<td>        Directory with the test images & masks [default: /home/dlcv/DataSet/fake_test]        ###Aixo del dir no ho tinc clar###
   
+  <weekNumber> --> Number of the week
+  <teamNumber> --> Team Number, in our case 04
+  <winEval> --> 0 for the first week and 1 for the rest of weeks
+  <querySet> --> number of the query
+  <MethodNumber> --> Number of the method : 1: Divided Histogram, 2: 3d Color Histogram
+  <distanceMeasure> --> 1: Euclidean distance, 2: x^2 distance
+  
+  Example of use --> python cbir.py 1 04 0 1 1 2
+
 """
 
 import pickle
@@ -16,6 +23,7 @@ import ml_metrics as metrics
 from docopt import docopt
 
 from query_images import HistogramGenerator, HistogramDistance
+import numpy as np
 
 
 def openfile():
@@ -63,8 +71,12 @@ def histogram_sequence():
         h1 = qs1[i]
         distance = {}
         for key in range(range_bbdd):
-            distance[key] = HistogramDistance.x2distance(h1, bbdd[key])
-            min_val = min(distance.values())
+            if distance_m == 2:
+                distance[key] = HistogramDistance.x2distance(h1, bbdd[key])
+                min_val = min(distance.values())
+            elif distance_m == 1:
+                distance[key] = HistogramDistance.euclidean(h1, bbdd[key])
+                min_val = min(distance.values())
 
         x = sorted(distance, key=distance.get, reverse=False)[:5]
         result_5k.append(x)
@@ -87,6 +99,8 @@ def histogram_sequence():
     print("time needed to complete sequence: ", t)
     print("for each image (aprox): ", t / range_qsd1)
     
+    return result_10k
+    
 
 if __name__ == "__main__":
 
@@ -97,9 +111,11 @@ if __name__ == "__main__":
     team      = int(args['<teamNumber>']) #04
     query_set = int(args['<querySet>']) #1 or 2
     method = int(args['<MethodNumber>']) #1: divided_hist  2:rgb_3d
+    distance_m = int(args['<distanceMeasure>']) # 1: euclidean and 2: x^2 distance
     
     # This folder contains your results: mask imaged and window list pkl files. Do not change this.
-    results_dir = '/home/dlcv{:02d}/m1-results/week{}/QST{}'.format(team, week, query_set)
+    #results_dir = '/home/dlcv{:02d}/m1-results/week{}/QST{}/Method{}'.format(team, week, query_set, method)
+    results_dir = '/Users/danielyuste/Documents/Master/M1_Project/week1'
     
     qsd1, bbdd1 = openfile()
     range_qsd1 = len(qsd1)
@@ -109,4 +125,11 @@ if __name__ == "__main__":
     bbdd = []  # Array (np.array) with the histogram of each image in the bbdd folder 
     qs1 = []  # Array (np.array) with the histogram of each image in the qsd1 folder
 
-    histogram_sequence()
+    result_10k = histogram_sequence()
+    
+    #Write the results in a .pkl file
+    pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
+    f = open(pickle_file, 'wb')
+    pickle.dump((qsd1, result_10k), f, protocol=pickle.HIGHEST_PROTOCOL)
+    f.close
+    
