@@ -43,7 +43,7 @@ class HistogramGenerator(object):
     @staticmethod
     def rgb_hist_3d(image, bins=8, mask=None):
 
-        imgRaw = cv.imread(image)
+        imgRaw = image.copy()
         hist = cv.calcHist([imgRaw], [0, 1, 2], mask, [bins, bins, bins], [0, 256, 0, 256, 0, 256])
         cv.normalize(hist, hist)
         return hist.flatten()
