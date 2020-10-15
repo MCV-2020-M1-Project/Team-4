@@ -23,7 +23,7 @@ Usage:
   
   distanceMeasure --> 1: Euclidean distance, 2: x^2 distance
   
-  Example of use --> python cbir.py 1 04 0 1 1 2
+  ##Example of use --> python cbir.py 1 04 0 1 1 2
 """
 
 ### Execute QSD2
@@ -34,13 +34,18 @@ Usage:
   background_removal_results.py -h | --help
   
   weekNumber --> Number of the week
+  
   teamNumber --> Team Number, in our case 04
+  
   winEval --> 0 for the first week and 1 for the rest of weeks
+  
   querySet --> number of the query
+  
   MethodNumber --> Number of the method : 1: Edges, 2: Morph
+  
   distanceMeasure --> 1: Euclidean distance, 2: x^2 distance
   
-  Example of use --> python background_removal_results.py 1 04 0 2 2 1
+  ##Example of use --> python background_removal_results.py 1 04 0 2 2 1
 
 """
 
