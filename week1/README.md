@@ -5,13 +5,19 @@ Use this command to install needed dependencies:
 
 ### Execute QSD1
 Usage:
+
   cbir.py <weekNumber> <teamNumber> <winEval> <querySet> <MethodNumber> [--testDir=<td>] 
+  
   cbir.py -h | --help
   
   <weekNumber> : Number of the week
+  
   <teamNumber> : Team Number, in our case 04
+  
   <winEval> : 0 for the first week, 1 for the rest of weeks
+  
   <querySet> : number of the query
+  
   <MethodNumber> : Number of the method : 1: Divided Histogram, 2: 3d Color Histogram
   
   Example of use --> python cbir.py 1 04 0 1 1
