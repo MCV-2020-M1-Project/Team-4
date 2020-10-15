@@ -5,7 +5,6 @@ Use this command to install needed dependencies:
 pip install -r requirements.txt
 
 ### Execute QSD1
-"""
 
 Usage:
   cbir.py |weekNumber| |teamNumber| |winEval| |querySet| |MethodNumber| |distanceMeasure|
@@ -23,11 +22,10 @@ Usage:
   
   distanceMeasure --> 1: Euclidean distance, 2: x^2 distance
   
-  ## Example of use --> python cbir.py 1 04 0 1 1 2
-"""
+  ### Example of use --> python cbir.py 1 04 0 1 1 2
+
 
 ### Execute QSD2
-"""
 
 Usage:
   background_removal_results.py |weekNumber| |teamNumber| |winEval| |querySet| |MethodNumber| |distanceMeasure| 
@@ -45,8 +43,8 @@ Usage:
   
   distanceMeasure --> 1: Euclidean distance, 2: x^2 distance
   
-  ## Example of use --> python background_removal_results.py 1 04 0 2 2 1
+  ### Example of use --> python background_removal_results.py 1 04 0 2 2 1
 
-"""
+
 
 
