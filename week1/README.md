@@ -23,7 +23,7 @@ Usage:
   
   distanceMeasure --> 1: Euclidean distance, 2: x^2 distance
   
-  ##Example of use --> python cbir.py 1 04 0 1 1 2
+  ## Example of use --> python cbir.py 1 04 0 1 1 2
 """
 
 ### Execute QSD2
@@ -45,7 +45,7 @@ Usage:
   
   distanceMeasure --> 1: Euclidean distance, 2: x^2 distance
   
-  ##Example of use --> python background_removal_results.py 1 04 0 2 2 1
+  ## Example of use --> python background_removal_results.py 1 04 0 2 2 1
 
 """
 
