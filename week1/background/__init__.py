@@ -1,0 +1,1 @@
+from background.background_removal import BackgroundRemove

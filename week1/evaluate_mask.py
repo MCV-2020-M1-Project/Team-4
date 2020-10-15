@@ -1,5 +1,6 @@
 import cv2
-from week1.background_removal import BackgroundRemove
+
+from background import BackgroundRemove
 
 N_IMAGES = 30
 
@@ -26,6 +27,9 @@ def evaluate(method):
 
 
 if __name__ == "__main__":
+    print("EDGES")
     evaluate(BackgroundRemove.EDGES)
+    print("MORPH")
     evaluate(BackgroundRemove.MORPH)
-    evaluate(BackgroundRemove.TRESH)
+    print("THRES")
+    evaluate(BackgroundRemove.THRES)

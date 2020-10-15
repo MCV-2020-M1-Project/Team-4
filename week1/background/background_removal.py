@@ -8,7 +8,7 @@ class BackgroundRemove(object):
 
     EDGES = 1
     MORPH = 2
-    TRESH = 3
+    THRES = 3
 
     __count = 1
 
@@ -167,7 +167,7 @@ class BackgroundRemove(object):
             mask = BackgroundRemove.method1(image, show_output)
         elif method == BackgroundRemove.MORPH:# Morphological
             mask = BackgroundRemove.method2(image, 2, show_output) #
-        elif method == BackgroundRemove.TRESH:# Threshold
+        elif method == BackgroundRemove.THRES:# Threshold
             mask = BackgroundRemove.method3(image, show_output)
 
         # Generate image cropped
