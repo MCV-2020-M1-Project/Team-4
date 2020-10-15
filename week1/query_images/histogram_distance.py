@@ -9,4 +9,5 @@ class HistogramDistance(object):
 
     @staticmethod
     def x2distance(h1, h2):  # x^2 distance
-        return np.sum(np.power((h1 - h2), 2) / (h1 + h2))
+        h1 = h1 + 0.0000000001
+        return np.sum(np.divide(np.power((h1 - h2), 2), (h1 + h2)))
