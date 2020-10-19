@@ -102,6 +102,9 @@ if __name__ == "__main__":
         maskbis.append(mask)
         qs2.append(HistogramGenerator.create_hists(qs))
         count = 0
+        #Save the masks of the query
+        cv2.imwrite('{}/query{}/method{}/{:05d}.png'.format(results_dir, query_set, method,i),mask )
+
 
     for i in range(range_bbdd1):
         img = cv2.imread('BBDD/bbdd_{:05d}.jpg'.format(i))
