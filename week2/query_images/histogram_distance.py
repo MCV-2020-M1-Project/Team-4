@@ -4,7 +4,7 @@ import numpy as np
 class HistogramDistance(object):
 
     @staticmethod
-    def euclidean2(h1, h2):  # Euclidean distance
+    def euclidean(h1, h2):  # Euclidean distance
         return np.linalg.norm(h1 - h2)
 
     @staticmethod

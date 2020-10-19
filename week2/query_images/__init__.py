@@ -1,3 +1,4 @@
 from query_images.background_removal import BackgroundRemove
 from query_images.histogram_generator import HistogramGenerator
 from query_images.histogram_distance import HistogramDistance
+from query_images.image_utils import ImageUtils

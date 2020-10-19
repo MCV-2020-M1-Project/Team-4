@@ -1,7 +1,20 @@
 import numpy as np
+import cv2
 
 
 class ImageUtils(object):
+
+    @staticmethod
+    def normalize_image(image):
+
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
+        height, width, dimensions = image.shape
+
+        if height > 250:
+            factor = height // 250
+            image = cv2.resize(image, (width // factor, height // factor), interpolation=cv2.INTER_AREA)
+
+        return image
 
     @staticmethod
     def divide_image(image, rows, cols):
@@ -22,6 +35,7 @@ class ImageUtils(object):
 
         for i in range(len(image_parts)):
             for j in range(len(image_parts[i])):
+
                 histogram, bins = np.histogram(image_parts[i][j].reshape(-1), bins, range=[0, 256])
                 normalize = np.linalg.norm(histogram)
                 full_histogram = np.concatenate((full_histogram, (histogram/normalize)))

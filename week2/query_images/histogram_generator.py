@@ -1,6 +1,8 @@
 import cv2 as cv
 import numpy as np
 
+from query_images.image_utils import ImageUtils
+
 
 class HistogramGenerator(object):
 
@@ -11,19 +13,12 @@ class HistogramGenerator(object):
         :param image: image array
         :return: array with histograms concatenated
         """
-        img = image.copy()
-        height, width, dimensions = img.shape
-        if height > 250:
-            factor = height // 250
-            img = cv.resize(img, (width // factor, height // factor), interpolation=cv.INTER_AREA)
-        img = cv.cvtColor(img, cv.COLOR_BGR2Lab)
-        height, width, dimensions = img.shape
+        height, width, dimensions = image.shape
+        image = ImageUtils.normalize_image(image)
 
         # Number of divisions
         column = 4
         row = 16
-        height_cutoff = height // row
-        width_cutoff = width // column
         output_array = []
 
         for d in range(dimensions):
@@ -32,12 +27,10 @@ class HistogramGenerator(object):
                 bins = 16
             else:
                 bins = 32
-            for c in range(column):
-                for r in range(row):
-                    s1 = img[r * height_cutoff:(r + 1) * height_cutoff, c * width_cutoff: (c + 1) * width_cutoff, d]
-                    s1_hist = np.array(cv.calcHist([s1], [0], None, [bins], [0, 256]))
-                    cv.normalize(s1_hist, s1_hist)
-                    output_array = np.concatenate((output_array, s1_hist), axis=None)
+
+            img_divided = ImageUtils.divide_image(image[:, :, d], row, column)
+            output_array = np.concatenate((output_array, ImageUtils.calc_hist(img_divided, bins)))
+
         return output_array
 
     @staticmethod
