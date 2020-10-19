@@ -126,17 +126,27 @@ class BackgroundRemove(object):
         return image
 
     @staticmethod
+    def normalize_countour(contours, ratio):
+        contours = contours.astype("float")
+        contours *= ratio
+        contours = contours.astype("int")
+        return contours
+
+    @staticmethod
     def generate_mask(image, contours, ratio):
 
         mask = np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
 
         # Detect the biggest contour and draw this in the mask image
         if len(contours) > 0:
-            c = max(contours, key=cv2.contourArea)
-            c = c.astype("float")
-            c *= ratio
-            c = c.astype("int")
-            cv2.drawContours(mask, [c], -1, (255, 0, 0), -1)
+            array_sorted = sorted(contours, key=cv2.contourArea)
+            c1 = BackgroundRemove.normalize_countour(array_sorted[0], ratio)
+
+            if len(array_sorted) > 1:
+                c2 = BackgroundRemove.normalize_countour(array_sorted[1], ratio)
+                cv2.drawContours(mask, [c1, c2], -1, (255, 0, 0), -1)
+            else:
+                cv2.drawContours(mask, [c1], -1, (255, 0, 0), -1)
 
         return mask
 
@@ -183,3 +193,12 @@ class BackgroundRemove(object):
         f1_score = 2 * ((precision * recall) / (precision + recall))
 
         return precision, recall, f1_score
+
+img = cv2.imread('../qsd2_w2/00002.jpg')
+mask = BackgroundRemove.method1(img, False)
+img = BackgroundRemove.crop_with_mask(img, mask)
+cv2.imshow("Img", mask)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
