@@ -194,11 +194,3 @@ class BackgroundRemove(object):
 
         return precision, recall, f1_score
 
-img = cv2.imread('../qsd2_w2/00002.jpg')
-mask = BackgroundRemove.method1(img, False)
-img = BackgroundRemove.crop_with_mask(img, mask)
-cv2.imshow("Img", mask)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-
