@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import imutils
-
+from matplotlib import pyplot as plt
 
 # Class to remove backgrounds and evaluate masks
 class BackgroundRemove(object):
@@ -152,9 +152,21 @@ class BackgroundRemove(object):
 
     @staticmethod
     def crop_with_mask(image, mask):
-        rect = cv2.boundingRect(mask)
-        cropped_img = image[rect[1]:(rect[1] + rect[3]), rect[0]:(rect[0] + rect[2])]
-        return cropped_img
+
+        images = []
+        (contours, hierarchy) = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for c in contours:
+            rect = cv2.minAreaRect(c)
+            box = cv2.boxPoints(rect)
+            box = np.int0(box)
+            x = np.array([box[0][0], box[1][0], box[2][0], box[3][0]])
+            y = np.array([box[0][1], box[1][1], box[2][1], box[3][1]])
+
+            cropped_img = image[min(y):max(y), min(x):max(x)]
+
+            images.append(cropped_img)
+
+        return images
 
     # Main method to remove a query_images, returns the image cropped and the mask
     @staticmethod
@@ -194,3 +206,17 @@ class BackgroundRemove(object):
 
         return precision, recall, f1_score
 
+    @staticmethod
+    def background_test():
+        img = cv2.imread('../qsd2_w2/00009.jpg')
+        mask = BackgroundRemove.method1(img)
+        imgsList = BackgroundRemove.crop_with_mask(img, mask)
+
+        titles = ['Original', 'With Bounding Box', "Img1", "Img2"]
+        images = [img, mask, imgsList[0], imgsList[1]]
+        for i in range(4):
+            plt.subplot(2, 2, i + 1)
+            plt.imshow(images[i], 'gray')
+            plt.title(titles[i])
+            plt.xticks([]), plt.yticks([])
+        plt.show()
