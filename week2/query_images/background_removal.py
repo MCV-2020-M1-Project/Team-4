@@ -9,6 +9,7 @@ class BackgroundRemove(object):
     EDGES = 1
     MORPH = 2
     THRES = 3
+    TOPHAT = 4
 
     # Method 1 using Edge detector
     @staticmethod
@@ -179,6 +180,8 @@ class BackgroundRemove(object):
             mask = BackgroundRemove.method2(image, 2, show_output) #
         elif method == BackgroundRemove.THRES:# Threshold
             mask = BackgroundRemove.method3(image, show_output)
+        elif method == BackgroundRemove.TOPHAT:  # Threshold
+            mask = BackgroundRemove.method4(image, show_output)
 
         # Generate image cropped
         image_crop = BackgroundRemove.crop_with_mask(image, mask)
@@ -207,16 +210,45 @@ class BackgroundRemove(object):
         return precision, recall, f1_score
 
     @staticmethod
-    def background_test():
-        img = cv2.imread('../qsd2_w2/00009.jpg')
-        mask = BackgroundRemove.method1(img)
-        imgsList = BackgroundRemove.crop_with_mask(img, mask)
+    def method4(img, show_ouput=False):
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        gray = cv2.morphologyEx(gray, cv2.MORPH_TOPHAT,
+                         cv2.getStructuringElement(cv2.MORPH_RECT, (5,5)),
+                                iterations=3)
 
-        titles = ['Original', 'With Bounding Box', "Img1", "Img2"]
-        images = [img, mask, imgsList[0], imgsList[1]]
-        for i in range(4):
-            plt.subplot(2, 2, i + 1)
+        (contours, hierarchy) = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        mask = np.zeros(gray.shape, dtype=np.uint8)
+        areaImg = gray.shape[0] * gray.shape[1]
+        areaMinImg = areaImg * 0.01
+        areaMaxImg = areaImg * 0.24
+        if len(contours) > 0:
+            for c in contours:
+                area = cv2.contourArea(c)
+                if area > areaMinImg:
+                    cv2.drawContours(mask, [c], -1, (255, 0, 0), -1)
+
+        return mask
+
+    @staticmethod
+    def background_test():
+        img = cv2.imread('../qsd2_w2/00003.jpg')
+        mask = BackgroundRemove.method4(img)
+        imgsList = BackgroundRemove.crop_with_mask(img, mask)
+        print(len(imgsList))
+
+        titles = ['Original', 'Mask', "Img1", "Img2"]
+        images = [img, mask, imgsList[0]]
+        for i in range(2):
+            plt.subplot(1, 2, i + 1)
             plt.imshow(images[i], 'gray')
             plt.title(titles[i])
             plt.xticks([]), plt.yticks([])
         plt.show()
+
+        plt.imshow(imgsList[0])
+        plt.show()
+        plt.imshow(imgsList[1])
+        plt.show()
+
+#BackgroundRemove.background_test()
