@@ -8,7 +8,7 @@ def text_detection(img):
     """
     This function detects the text in the image and returns an array with coordinates of text bbox.
         input: image in BGR spacecolor.
-        output: [tlx1, tly1, brx1, bry1] where t = top, b = bottom, l = left, r = right
+        output: [min x, min y, max x, max y]
     """
     rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # convert image to RGB color space
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # convert image to HSV color space
@@ -35,7 +35,9 @@ def text_detection(img):
         box = cv2.boxPoints(rect)
         box = np.int0(box)
         cv2.drawContours(rgb, [box], 0, (255, 0, 0), 2)
-        coordinates = np.concatenate([box[0], box[2]])
+        x = np.array([box[0][0],box[1][0],box[2][0],box[3][0]])
+        y = np.array([box[0][1],box[1][1],box[2][1],box[3][1]])
+        coordinates = np.array([min(x),min(y),max(x),max(y)])
     else:
         coordinates = np.zeros([4])
     '''
@@ -51,19 +53,43 @@ def text_detection(img):
     return coordinates
 
 
+def bb_intersection_over_union(boxA, boxB):
+    # determine the (x, y)-coordinates of the intersection rectangle
+    xA = max(boxA[0], boxB[0])
+    yA = max(boxA[1], boxB[1])
+    xB = min(boxA[2], boxB[2])
+    yB = min(boxA[3], boxB[3])
+    # compute the area of intersection rectangle
+    interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+    # compute the area of both the prediction and ground-truth
+    # rectangles
+    boxAArea = (boxA[2] - boxA[0] + 1) * (boxA[3] - boxA[1] + 1)
+    boxBArea = (boxB[2] - boxB[0] + 1) * (boxB[3] - boxB[1] + 1)
+    # compute the intersection over union by taking the intersection
+    # area and dividing it by the sum of prediction + ground-truth
+    # areas - the interesection area
+    iou = interArea / float(boxAArea + boxBArea - interArea)
+    # return the intersection over union value
+    return iou
+
+
 tboxesfile = open('qsd1_w2/text_boxes.pkl', 'rb')
 tboxes = pickle.load(tboxesfile)
 tboxesfile.close()
 original_tboxes = np.empty([30, 4], dtype=int)
 for i in range(len(tboxes)):
-    original_tboxes[i] = np.concatenate([tboxes[i][0][1], tboxes[i][0][3]])
+    original_tboxes[i] = np.concatenate([tboxes[i][0][0], tboxes[i][0][2]])
 tboxes_list = list(original_tboxes)
 
 query_tboxes = np.empty([30, 4], dtype=int)
+metric_IoU = np.empty([30], dtype=float)
 for i in range(30):
     img = cv2.imread('qsd1_w2/{:05d}.jpg'.format(i))
     query_tboxes[i] = text_detection(img)
+    metric_IoU[i] = bb_intersection_over_union(query_tboxes[i], original_tboxes[i])
 query_list = list(query_tboxes)
 
-print('Original coordinates: ', tboxes_list)
-print('Finded coordinates: ', query_list)
+metric_iou_mean = np.mean(metric_IoU)
+print('Original text positions: ', tboxes_list)
+print('Finded text positions: ', query_list)
+print('metric_IoU average: ',metric_iou_mean)
