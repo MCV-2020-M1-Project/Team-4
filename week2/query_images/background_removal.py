@@ -10,6 +10,7 @@ class BackgroundRemove(object):
     MORPH = 2
     THRES = 3
     TOPHAT = 4
+    THRES_MORPH = 5
 
     # Method 1 using Edge detector
     @staticmethod
@@ -182,6 +183,8 @@ class BackgroundRemove(object):
             mask = BackgroundRemove.method3(image, show_output)
         elif method == BackgroundRemove.TOPHAT:  # Threshold
             mask = BackgroundRemove.method4(image, show_output)
+        elif method == BackgroundRemove.THRES_MORPH:
+            mask = BackgroundRemove.method5(image, show_output)
 
         # Generate image cropped
         image_crop = BackgroundRemove.crop_with_mask(image, mask)
@@ -230,6 +233,24 @@ class BackgroundRemove(object):
                 area = cv2.contourArea(c)
                 if area > areaMinImg:
                     cv2.drawContours(mask, [c], -1, (255, 0, 0), -1)
+
+        return mask
+
+    @staticmethod
+    def method5(img, show_ouput=False):
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        gray = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY_INV)[1]
+
+        gray = cv2.morphologyEx(gray, cv2.MORPH_CLOSE,
+                                cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5)),
+                                iterations=2)
+
+        (contours, hierarchy) = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        mask = np.zeros(gray.shape, dtype=np.uint8)
+        if len(contours) > 0:
+            list = sorted(contours, key=cv2.contourArea, reverse=True)
+            cv2.drawContours(mask, list[0:2], -1, (255, 0, 0), -1)
 
         return mask
 
