@@ -213,15 +213,18 @@ class BackgroundRemove(object):
     def method4(img, show_ouput=False):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray = cv2.morphologyEx(gray, cv2.MORPH_TOPHAT,
-                         cv2.getStructuringElement(cv2.MORPH_RECT, (5,5)),
-                                iterations=3)
+                         cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)),
+                                iterations=2)
+
+        gray = cv2.morphologyEx(gray, cv2.MORPH_GRADIENT,
+                                cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2)),
+                                iterations=1)
 
         (contours, hierarchy) = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         mask = np.zeros(gray.shape, dtype=np.uint8)
         areaImg = gray.shape[0] * gray.shape[1]
         areaMinImg = areaImg * 0.01
-        areaMaxImg = areaImg * 0.24
         if len(contours) > 0:
             for c in contours:
                 area = cv2.contourArea(c)
@@ -232,7 +235,7 @@ class BackgroundRemove(object):
 
     @staticmethod
     def background_test():
-        img = cv2.imread('../qsd2_w2/00003.jpg')
+        img = cv2.imread('../qsd2_w2/00005.jpg')
         mask = BackgroundRemove.method4(img)
         imgsList = BackgroundRemove.crop_with_mask(img, mask)
         print(len(imgsList))
