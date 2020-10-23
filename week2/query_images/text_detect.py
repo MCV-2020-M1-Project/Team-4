@@ -202,14 +202,14 @@ class TextDetect(object):
         mask = np.zeros((rgb.shape[0], rgb.shape[1]), dtype=np.uint8)
 
         # Open morphological transformation using a square kernel with dimensions 10x10
-        kernel = np.ones((10, 10), np.uint8)
+        kernel = np.ones((15, 15), np.uint8)
         morph_open = cv2.morphologyEx(s, cv2.MORPH_OPEN, kernel)
         # Convert the image to binary
-        ret, th1 = cv2.threshold(morph_open, 35, 255, cv2.THRESH_BINARY_INV)
+        ret, th1 = cv2.threshold(morph_open, 20, 255, cv2.THRESH_BINARY_INV)
 
         # Open and close morphological transformation using a rectangle kernel relative to the shape of the image
         shape = img.shape
-        kernel = np.ones((shape[0] // 50, shape[1] // 5), np.uint8)
+        kernel = np.ones((shape[0] // 60, shape[1] // 4), np.uint8)
         th2 = cv2.morphologyEx(th1, cv2.MORPH_OPEN, kernel)
         th3 = cv2.morphologyEx(th2, cv2.MORPH_CLOSE, kernel)
         # Find the contours
@@ -241,7 +241,7 @@ class TextDetect(object):
             coordinates = np.array([min(x), min(y), max(x), max(y)])
         else:
             coordinates = np.zeros([4])
-
+        '''
         titles = ['Original', 'With Bounding Box', 'Dilate op.', 'Open op.']
         images = [rgb, img, mask, th3]
         for i in range(4):
@@ -249,5 +249,5 @@ class TextDetect(object):
             plt.title(titles[i])
             plt.xticks([]), plt.yticks([])
         plt.show()
-
+        '''
         return img, mask, coordinates

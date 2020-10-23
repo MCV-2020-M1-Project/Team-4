@@ -27,14 +27,15 @@ def text_detection(img):
     h, s, v = cv2.split(hsv)  # split the channels of the color space in Hue, Saturation and Value
 
     # Open morphological transformation using a square kernel with dimensions 10x10
-    kernel = np.ones((10, 10), np.uint8)
+    kernel = np.ones((15, 15), np.uint8)
+    # kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (10, 10))
     morph_open = cv2.morphologyEx(s, cv2.MORPH_OPEN, kernel)
     # Convert the image to binary
-    ret, th1 = cv2.threshold(morph_open, 30, 255, cv2.THRESH_BINARY_INV)
+    ret, th1 = cv2.threshold(morph_open, 20, 255, cv2.THRESH_BINARY_INV)
 
     # Open and close morphological transformation using a rectangle kernel relative to the shape of the image
     shape = img.shape
-    kernel = np.ones((shape[0] // 50, shape[1] // 5), np.uint8)
+    kernel = np.ones((shape[0] // 60, shape[1] // 4), np.uint8)
     th2 = cv2.morphologyEx(th1, cv2.MORPH_OPEN, kernel)
     th3 = cv2.morphologyEx(th2, cv2.MORPH_CLOSE, kernel)
     # Find the contours
