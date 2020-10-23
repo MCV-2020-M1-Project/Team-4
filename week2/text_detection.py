@@ -4,6 +4,18 @@ import pickle
 from matplotlib import pyplot as plt
 
 
+def openfile():
+    
+    tboxesfile = open('qsd1_w2/text_boxes.pkl', 'rb')
+    tboxes = pickle.load(tboxesfile)
+    tboxesfile.close()
+    original_tboxes = np.empty([30, 4], dtype=int)
+    for i in range(len(tboxes)):
+        original_tboxes[i] = np.concatenate([tboxes[i][0][0], tboxes[i][0][2]])
+    tboxes_list = list(original_tboxes)
+    
+    return tboxes_list, original_tboxes
+
 def text_detection(img):
     """
     This function detects the text in the image and returns an array with coordinates of text bbox.
@@ -72,6 +84,7 @@ def bb_intersection_over_union(boxA, boxB):
     # return the intersection over union value
     return iou
 
+tboxes_list, original_tboxes = openfile()
 
 tboxesfile = open('qsd1_w2/text_boxes.pkl', 'rb')
 tboxes = pickle.load(tboxesfile)
