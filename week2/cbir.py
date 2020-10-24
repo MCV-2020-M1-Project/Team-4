@@ -23,6 +23,7 @@ import ml_metrics as metrics
 from docopt import docopt
 
 from query_images import HistogramGenerator, HistogramDistance
+from text_detection import TextDetection
 
 
 def openfile():
@@ -35,7 +36,7 @@ def openfile():
     return qsd1, bbdd1
 
 
-def histogram_sequence():
+def histogram_sequence(row, column):
     
     t = time.time()
     # Finding Euclidean distance
@@ -47,21 +48,39 @@ def histogram_sequence():
     print("Creating image descriptors...")
     
     for i in range(range_qsd1):
-        image = cv2.imread('qsd{}_w{}/{:05d}.jpg'.format(query_set, week, i))
-    
-        if method == 1:
-            qs1.append(HistogramGenerator.create_hists(image))
-        elif method == 2:
-            qs1.append(HistogramGenerator.rgb_hist_3d(image))
+        
+        
+        if week ==1:
+            image = cv2.imread('qsd{}_w{}/{:05d}.jpg'.format(query_set, week, i))
+            if method == 1:
+                qs1.append(HistogramGenerator.create_hists(image, row, column))
+            elif method == 2:
+                qs1.append(HistogramGenerator.rgb_hist_3d(image))
 
+            for i in range(range_bbdd):
+                image = cv2.imread('BBDD/bbdd_{:05d}.jpg'.format(i))
+            
+                if method == 1:
+                    bbdd.append(HistogramGenerator.create_hists(image, row, column))
+                elif method == 2:
+                    bbdd.append(HistogramGenerator.rgb_hist_3d(image))
+                    
+        elif week == 2:
+            #Using always the method one
+            for i in range(range_qsd1):
+                image = cv2.imread('qsd{}_w{}/{:05d}.jpg'.format(query_set, week, i))
+                #Extract text coordinates and remove it on the image
+                coordinates = TextDetection.text_detection(image)
+                image[int(coordinates[1]-5):int(coordinates[3]+5), int(coordinates[0]-5):int(coordinates[2]+5)]= 0
+                qs1.append(HistogramGenerator.create_hists(image, row, column))
+                
+                
     for i in range(range_bbdd):
         image = cv2.imread('BBDD/bbdd_{:05d}.jpg'.format(i))
+        image[int(coordinates[1]-5):int(coordinates[3]+5), int(coordinates[0]-5):int(coordinates[2]+5)]= 0
+        bbdd.append(HistogramGenerator.create_hists(image, row, column))
+
             
-        if method == 1:
-            bbdd.append(HistogramGenerator.create_hists(image))
-        elif method == 2:
-            bbdd.append(HistogramGenerator.rgb_hist_3d(image))
-        
         
     print("Loaded")
     print("Finding similarities")
@@ -70,11 +89,15 @@ def histogram_sequence():
         h1 = qs1[i]
         distance = {}
         for key in range(range_bbdd):
-            if distance_m == 2:
+            if week == 1: 
+                if distance_m == 2:
+                    distance[key] = HistogramDistance.x2distance(h1, bbdd[key])
+                    min_val = min(distance.values())
+                elif distance_m == 1:
+                    distance[key] = HistogramDistance.euclidean(h1, bbdd[key])
+                    min_val = min(distance.values())
+            if week ==2:
                 distance[key] = HistogramDistance.x2distance(h1, bbdd[key])
-                min_val = min(distance.values())
-            elif distance_m == 1:
-                distance[key] = HistogramDistance.euclidean(h1, bbdd[key])
                 min_val = min(distance.values())
 
         x = sorted(distance, key=distance.get, reverse=False)[:5]
@@ -98,7 +121,11 @@ def histogram_sequence():
     print("time needed to complete sequence: ", t)
     print("for each image (aprox): ", t / range_qsd1)
     
-    return result_10k
+    metric_iou_mean = TextDetection.extract_text()
+    
+    return result_10k, metric_iou_mean
+
+
     
 
 if __name__ == "__main__":
@@ -114,7 +141,13 @@ if __name__ == "__main__":
     
     # This folder contains your results: mask imaged and window list pkl files. Do not change this.
     #results_dir = '/home/dlcv{:02d}/m1-results/week{}/QST{}/Method{}'.format(team, week, query_set, method)
-    results_dir = '/Users/danielyuste/Documents/Master/M1_Project/week1'
+    results_dir = '/Users/danielyuste/Documents/Master/M1_Project/week2'
+    #Select the level of the histogram block
+    
+    row = input('Please, choose the number of rows to make the histogram block')
+    row = int(row)
+    column = input('Please, choose the number of columns to make the histogram block')
+    column = int(column)
     
     qsd1, bbdd1 = openfile()
     range_qsd1 = len(qsd1)
@@ -124,11 +157,12 @@ if __name__ == "__main__":
     bbdd = []  # Array (np.array) with the histogram of each image in the bbdd folder 
     qs1 = []  # Array (np.array) with the histogram of each image in the qsd1 folder
 
-    result_10k = histogram_sequence()
+    result_10k, metric = histogram_sequence(row, column)
+    print('metric_iou_mean = ', metric*100, '%')
     
-    #Write the results in a .pkl file
+    
+    #write the results in a .pkl file
     pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
     f = open(pickle_file, 'wb')
     pickle.dump((qsd1, result_10k), f, protocol=pickle.HIGHEST_PROTOCOL)
     f.close
-    
