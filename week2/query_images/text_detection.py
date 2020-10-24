@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import pickle
 from matplotlib import pyplot as plt
+from query_images.image_utils import ImageUtils
 
 
 class TextDetection(object):
@@ -34,7 +35,7 @@ class TextDetection(object):
     # kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (10, 10))
         morph_open = cv2.morphologyEx(s, cv2.MORPH_OPEN, kernel)
     # Convert the image to binary
-        ret, th1 = cv2.threshold(morph_open, 20, 255, cv2.THRESH_BINARY_INV)
+        ret, th1 = cv2.threshold(morph_open, 35, 255, cv2.THRESH_BINARY_INV)
 
     # Open and close morphological transformation using a rectangle kernel relative to the shape of the image
         shape = img.shape
@@ -110,7 +111,7 @@ class TextDetection(object):
 
         metric_iou_mean = np.mean(metric_IoU)
         
-        return metric_iou_mean
+        return metric_iou_mean, query_list, tboxes_list
     
         print('Original text positions: ', tboxes_list)
         print('Finded text positions: ', query_list)
