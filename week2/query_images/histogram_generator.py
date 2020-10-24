@@ -7,7 +7,7 @@ from query_images.image_utils import ImageUtils
 class HistogramGenerator(object):
 
     @staticmethod
-    def create_hists(image):
+    def create_hists(image, row, column):
         """
         This function load an image, filtered with some basic operations and calculate some specific histograms
         :param image: image array
@@ -17,8 +17,8 @@ class HistogramGenerator(object):
         image = ImageUtils.normalize_image(image)
 
         # Number of divisions
-        column = 4
-        row = 16
+        column = column
+        row = row
         output_array = []
 
         for d in range(dimensions):
@@ -32,6 +32,7 @@ class HistogramGenerator(object):
             output_array = np.concatenate((output_array, ImageUtils.calc_hist(img_divided, bins)))
 
         return output_array
+
 
     @staticmethod
     def rgb_hist_3d(image, bins=8, mask=None):
