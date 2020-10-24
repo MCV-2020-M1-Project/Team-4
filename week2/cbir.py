@@ -22,6 +22,7 @@ import cv2
 import ml_metrics as metrics
 from docopt import docopt
 
+
 from query_images import HistogramGenerator, HistogramDistance, TextDetection
 
 
@@ -121,9 +122,9 @@ def histogram_sequence(row, column):
     print("time needed to complete sequence: ", t)
     print("for each image (aprox): ", t / range_qsd1)
     
-    metric_iou_mean = TextDetection.extract_text()
+    metric_iou_mean, query_list, tboxes_list = TextDetection.extract_text()
     
-    return result_10k, metric_iou_mean
+    return result_10k, metric_iou_mean, query_list, tboxes_list
 
 
     
@@ -141,7 +142,7 @@ if __name__ == "__main__":
     
     # This folder contains your results: mask imaged and window list pkl files. Do not change this.
     #results_dir = '/home/dlcv{:02d}/m1-results/week{}/QST{}/Method{}'.format(team, week, query_set, method)
-    results_dir = '/Users/danielyuste/Documents/Master/M1_Project/week2'
+    results_dir = '/Users/danielyuste/Documents/Master/M1_Project/week2a'
     #Select the level of the histogram block
     
     row = input('Please, choose the number of rows to make the histogram block')
@@ -157,7 +158,7 @@ if __name__ == "__main__":
     bbdd = []  # Array (np.array) with the histogram of each image in the bbdd folder 
     qs1 = []  # Array (np.array) with the histogram of each image in the qsd1 folder
 
-    result_10k, metric = histogram_sequence(row, column)
+    result_10k, metric, query_list, tboxes_list = histogram_sequence(row, column)
     print('metric_iou_mean = ', metric*100, '%')
     
     
@@ -165,4 +166,9 @@ if __name__ == "__main__":
     pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
     f = open(pickle_file, 'wb')
     pickle.dump((qsd1, result_10k), f, protocol=pickle.HIGHEST_PROTOCOL)
+    f.close
+    
+    pickle_file = '{}/query{}/method{}/text_boxes.pkl'.format(results_dir, query_set, method)
+    f = open(pickle_file, 'wb')
+    pickle.dump((tboxes_list, query_list), f, protocol=pickle.HIGHEST_PROTOCOL)
     f.close
