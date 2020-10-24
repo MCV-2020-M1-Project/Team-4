@@ -22,8 +22,8 @@ import cv2
 import ml_metrics as metrics
 from docopt import docopt
 
-from query_images import HistogramGenerator, HistogramDistance
-from text_detection import TextDetection
+from query_images import HistogramGenerator, HistogramDistance, TextDetection
+
 
 
 def openfile():
