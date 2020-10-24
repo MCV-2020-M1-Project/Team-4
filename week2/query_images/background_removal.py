@@ -208,7 +208,10 @@ class BackgroundRemove(object):
         # Calculate precision, recall and f1-score
         precision = tp / (tp + fp)
         recall = tp / (tp + fn)
-        f1_score = 2 * ((precision * recall) / (precision + recall))
+        if recall == 0 and precision ==0:
+            f1_score = 0
+        else:
+            f1_score = 2 * ((precision * recall) / (precision + recall))
 
         return precision, recall, f1_score
 
