@@ -27,8 +27,8 @@ from query_images import BackgroundRemove, HistogramDistance, HistogramGenerator
 
 
 def openfile():
-    qsd1file = open('qsd1_w1/gt_corresps.pkl', 'rb')
-    qsd1 = pickle.load(qsd1file)
+    #qsd1file = open('qsd1_w1/gt_corresps.pkl', 'rb')
+    #qsd1 = pickle.load(qsd1file)
     bbddfile = open('BBDD/relationships.pkl', 'rb')
     bbdd1 = pickle.load(bbddfile)
     qsd2file = open('qsd{}_w{}/gt_corresps.pkl'.format(query_set, week), 'rb')
@@ -36,7 +36,7 @@ def openfile():
     mask2file = open('qsd{}_w{}/frames.pkl'.format(query_set, week), 'rb')
     mask2 = pickle.load(mask2file)
 
-    return qsd1, bbdd1, qsd2, mask2
+    return bbdd1, qsd2, mask2
 
 def stadistics_mask(mask2, maskbis):
     precision = []
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     distance_m = int(args['<distanceMeasure>']) # 1: euclidean and 2: x^2 distance
     
     # This folder contains your results: mask imaged and window list pkl files. Do not change this.
-    results_dir = '/Users/danielyuste/Documents/Master/M1_Project/week2a'
+    results_dir = '/Users/danielyuste/Documents/Master/M1_Project/week2'
     
     row = input('Please, choose the number of rows to make the histogram block')
     row = int(row)
@@ -72,8 +72,8 @@ if __name__ == "__main__":
     column = int(column)
     
 
-    qsd1, bbdd1, qsd2, mask2 = openfile()
-    range_qsd1 = len(qsd1)
+    bbdd1, qsd2, mask2 = openfile()
+    #range_qsd1 = len(qsd1)
     range_qsd2 = len(qsd2)
     range_mask2 = len(mask2)
     range_bbdd1 = len(bbdd1)
@@ -138,6 +138,13 @@ if __name__ == "__main__":
     result_list1 = []
     result_list2 = []
     result_list3 = []
+    result_list4 = []
+    n = 2
+    y1=[]
+    y2=[]
+    y3=[]
+    x1=[]
+    x2=[]
     for i in range(len(qs2)):
         h1 = qs2[i]
         distance = {}
@@ -148,36 +155,26 @@ if __name__ == "__main__":
             elif distance_m ==1:
                 distance[key] = HistogramDistance.euclidean(h1, bbdd[key])
                 min_val = min(distance.values())
-                
-        x = sorted(distance, key=distance.get, reverse=False)[:5]
-        if a == 0:
-            res = x[0]
-            a+=1
-        elif a == 1:
-            res2 = x[0]
-            if res ==res2:
-                result_list1.append([res])
-            else:
-                result_list1.append([res, res2])
-            a+=1
-        if a == 2:
-            a = 0
-            
+           
+        #Result5K.pkl
         result = [key for key, value in distance.items() if value == min_val]
-        y = sorted(distance, key=distance.get, reverse=False)[:10]
-        if b == 0:
-            res = y[0]
-            b+=1
-        elif b == 1:
-            res2 = y[0]
-            if res ==res2:
-                result_list2.append([res])
-            else:
-                result_list2.append([res, res2])
-            b+=1
-        if b == 2:
-            b = 0
+        x = sorted(distance, key=distance.get, reverse=False)[:5]
         
+        if  (n % 2) == 0:
+            x1 = x[:]
+        else:
+            x2 = x[:]
+            count_x = 0
+            for i in range(5):
+                if (x1[i] == x2[i]):
+                    count_x +=1
+            if count_x == 5:
+                result_list1.append([x1])
+            else:
+                result_list1.append([x1, x2])
+
+                
+        #MAP1K        
         result = [key for key, value in distance.items() if value == min_val]
         if c == 0:
             res = result[0]
@@ -191,24 +188,45 @@ if __name__ == "__main__":
             c+=1
         if c == 2:
             c = 0
-            
-    result_10k = result_list2       
-    result_1k = result_list3
-    result_5k = result_list1
-            
         
-        # print('The image that corresponds to the query image nº ', i, ' is ', qsd1[i])
-        # print('The image with the lowest euclidean distance is ', result)
-    print(result_1k)
-    print(qsd2)
+        #Result10K.pkl
+        result = [key for key, value in distance.items() if value == min_val]
+        y = sorted(distance, key=distance.get, reverse=False)[:10]
+        
+        if  (n % 2) == 0:
+            y1 = y[:]
+        else:
+            y2 = y[:]
+            count_y = 0
+            for i in range(10):
+                if (y1[i] == y2[i]):
+                    count_y +=1
+            if count_y == 10:
+                result_list2.append([y1])
+            else:
+                result_list2.append([y1, y2])
+            
+        n+=1
+
+    result_10k_pkl = result_list2       
+    result_1k = result_list3
+    result_5k = result_list1 
+
     score_k1 = metrics.mapk(qsd2, result_1k, 1) * 100
-    score_k5 = metrics.mapk(qsd2, result_5k, 5) * 100
-    score_k10 = metrics.mapk(qsd2, result_10k, 10) * 100
     
+    score_k5_Total = 0
+    for i in range(len(result_5k)):
+        score_k5 = metrics.mapk(qsd2, result_5k[i], 5) * 100
+        score_k5_Total += score_k5
+        
+        
+    score_k10_Total = 0
+    score_k10 = metrics.mapk([qsd2], result_10k_pkl, 10) * 100
+
     
     print('Score K1 = ', score_k1, '%')
-    print('Score K5 = ', score_k5, '%')
-    print('Score K10 = ', score_k10, '%')
+    print('Score K5 = ', score_k5_Total, '%')
+    print('Score K10 = ', score_k10_Total, '%')
 
     precision, recall, score_f1 = stadistics_mask(mask2, maskbis)
     
@@ -218,13 +236,11 @@ if __name__ == "__main__":
     
     t = time.time() - t
     print("time needed to complete sequence: ", t)
-    print("for each image (aprox): ", t / range_qsd1)
+    print("for each image (aprox): ", t / range_qsd2)
     
-
     
     #Write the results in a .pkl file
     pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
     f = open(pickle_file, 'wb')
-    pickle.dump((qsd2, result_10k), f, protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump((qsd2, result_10k_pkl), f, protocol=pickle.HIGHEST_PROTOCOL)
     f.close
-
