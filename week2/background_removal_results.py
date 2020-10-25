@@ -221,7 +221,9 @@ if __name__ == "__main__":
         
         
     score_k10_Total = 0
-    score_k10 = metrics.mapk([qsd2], result_10k_pkl, 10) * 100
+    for i in range(len(result_10k_pkl)):
+        score_k10 = metrics.mapk(qsd2, result_10k_pkl[i], 10) * 100
+        score_k10_Total += score_k10
 
     
     print('Score K1 = ', score_k1, '%')
