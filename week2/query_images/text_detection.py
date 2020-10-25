@@ -29,9 +29,10 @@ class TextDetection(object):
         rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # convert image to RGB color space
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)  # convert image to HSV color space
         h, s, v = cv2.split(hsv)  # split the channels of the color space in Hue, Saturation and Value
-
+        #TextDetection.find_regions(img)
     # Open morphological transformation using a square kernel with dimensions 10x10
-        kernel = np.ones((15, 15), np.uint8)
+        kernel = np.ones((10, 10), np.uint8)
+        s= cv2.GaussianBlur(s, (5, 5), 0)
     # kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (10, 10))
         morph_open = cv2.morphologyEx(s, cv2.MORPH_OPEN, kernel)
     # Convert the image to binary
@@ -41,17 +42,23 @@ class TextDetection(object):
         shape = img.shape
         kernel = np.ones((shape[0] // 60, shape[1] // 4), np.uint8)
         th2 = cv2.morphologyEx(th1, cv2.MORPH_OPEN, kernel)
-        th3 = cv2.morphologyEx(th2, cv2.MORPH_CLOSE, kernel)
+        #th3 = cv2.morphologyEx(th2, cv2.MORPH_CLOSE, kernel)
 
     # Find the contours
-        (contours, hierarchy) = cv2.findContours(th3, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        (contours, hierarchy) = cv2.findContours(th2, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        if len(contours) == 0:
+            th3 = cv2.morphologyEx(th1, cv2.MORPH_CLOSE, kernel)
+            #th3 = cv2.morphologyEx(th2, cv2.MORPH_OPEN, kernel)
+            (contours, hierarchy) = cv2.findContours(th3, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Find the coordinates of the contours and draw it in the original image
+        # Find the coordinates of the contours and draw it in the original image
         if len(contours) > 0:
             c = max(contours, key=cv2.contourArea)
+            c = contours[TextDetection.eval_contours(contours, shape[1])]
             rect = cv2.minAreaRect(c)
             box = cv2.boxPoints(rect)
             box = np.int0(box)
+
             cv2.drawContours(rgb, [box], 0, (255, 0, 0), 2)
             x = np.array([box[0][0],box[1][0],box[2][0],box[3][0]])
             y = np.array([box[0][1],box[1][1],box[2][1],box[3][1]])
@@ -72,6 +79,76 @@ class TextDetection(object):
             #plt.show()
 
         return coordinates, mask
+
+    @staticmethod
+    def eval_contours(contours, width):
+        if len(contours) == 0: return 0
+        if len(contours) == 1: return 0
+
+        max_area = []
+        for i in range(len(contours)):
+            area = cv2.contourArea(contours[i])
+            max_area.append(area)
+
+        max_order = [0]
+        for i in range(1, len(max_area)):
+            for l in range(len(max_order)+1):
+                if l == len(max_order):
+                    max_order.append(i)
+                    break
+                elif max_area[i] > max_area[max_order[l]]:
+                    max_order.insert(l, i)
+                    break
+
+        # Get the moments
+        mu = [None] * len(contours)
+        for i in range(len(contours)):
+            mu[i] = cv2.moments(contours[i])
+        # Get the mass centers
+        mc = [None] * len(contours)
+        for i in range(len(contours)):
+            # add 1e-5 to avoid division by zero
+            mc[i] = (mu[i]['m10'] / (mu[i]['m00'] + 1e-5), mu[i]['m01'] / (mu[i] ['m00'] + 1e-5))
+
+        CM_order = [0]
+        for i in range(1, len(mc)):
+
+            for l in range(len(CM_order) + 1):
+                if l == len(CM_order):
+                    CM_order.append(i)
+                    break
+                elif abs(mc[i][0]-(width/2)) < abs(mc[CM_order[l]][0]-(width/2)):
+                    CM_order.insert(l, i)
+                    break
+
+        return CM_order[0]
+
+    @staticmethod
+    def find_regions(img):
+        YCbCr = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+        Y = YCbCr[:, :, 0]
+        Cb = YCbCr[:, :, 1]
+        Cr = YCbCr[:, :, 2]
+
+        temp = Cb == np.roll(Cb, 1)
+        for i in range(7):
+            temp = temp & ((Cb == np.roll(Cb, i)) & (Cr == np.roll(Cr, i)) & ((Y + 1 < np.roll(Y, i)) & (Y - 1 > np.roll(Y, i))))
+
+        negTemp = temp = Cb == np.roll(Cb, -1)
+        for i in range(7):
+            negTemp = negTemp & ((Cb == np.roll(Cb, -i)) & (Cr == np.roll(Cr, -i)) & ((Y + 1 < np.roll(Y, -i)) & (Y - 1 > np.roll(Y, -i))))
+
+        final = negTemp | temp
+        #final = ((Cb == np.roll(Cb, 1)) & (Cb == np.roll(Cb, 2)) & (Cr == np.roll(Cr, 1)) & (Cr == np.roll(Cr, 2)) )|((Cb == np.roll(Cb, -1)) & (Cb == np.roll(Cb, -2)) & (Cr == np.roll(Cr, -1)) & (Cr == np.roll(Cr, -2)))
+        img[~final] = 0
+        img = img.astype(np.uint8)
+        cv2.imshow("binary", img)
+
+        YRB = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
+        plt.subplot(1, 1, 1), plt.imshow(YRB, 'Accent')
+        plt.xticks([]), plt.yticks([])
+        plt.show()
+        cv2.waitKey()
 
     @staticmethod
     def bb_intersection_over_union(boxA, boxB):
