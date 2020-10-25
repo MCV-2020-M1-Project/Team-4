@@ -43,7 +43,7 @@ class ImageUtils(object):
                 if normalize != 0:
                     full_histogram = np.concatenate((full_histogram, (histogram/normalize)))
                 else:
-                    histNegative = np.zeros((binsSize)) - 1
+                    histNegative = np.zeros((binsSize)) - 0
                     full_histogram = np.concatenate((full_histogram, histNegative))
 
         return full_histogram
