@@ -29,15 +29,21 @@ class ImageUtils(object):
         return divide_columns
 
     @staticmethod
-    def calc_hist(image_parts, bins=32):
+    def calc_hist(image_parts, binsSize=32, mask=None):
 
         full_histogram = np.array([])
 
         for i in range(len(image_parts)):
             for j in range(len(image_parts[i])):
-
-                histogram, bins = np.histogram(image_parts[i][j].reshape(-1), bins, range=[0, 256])
+                img_slice = image_parts[i][j]
+                if mask is not None:
+                    img_slice = img_slice[np.where(mask[i][j]==0)]
+                histogram, bins = np.histogram(img_slice.reshape(-1), binsSize, range=[0, 256])
                 normalize = np.linalg.norm(histogram)
-                full_histogram = np.concatenate((full_histogram, (histogram/normalize)))
+                if normalize != 0:
+                    full_histogram = np.concatenate((full_histogram, (histogram/normalize)))
+                else:
+                    histNegative = np.zeros((binsSize)) - 1
+                    full_histogram = np.concatenate((full_histogram, histNegative))
 
         return full_histogram

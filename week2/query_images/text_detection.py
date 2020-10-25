@@ -56,8 +56,11 @@ class TextDetection(object):
             x = np.array([box[0][0],box[1][0],box[2][0],box[3][0]])
             y = np.array([box[0][1],box[1][1],box[2][1],box[3][1]])
             coordinates = np.array([min(x),min(y),max(x),max(y)])
+            mask = np.zeros(th2.shape)
+            mask[int(coordinates[1]-5):int(coordinates[3]+5), int(coordinates[0]-5):int(coordinates[2]+5)] = 255
         else:
             coordinates = np.zeros([4])
+            mask = (np.ones(th2.shape)*255).astype(np.uint8)
        
         #Plot the image
         #titles = ['Original with Bbox']
@@ -67,8 +70,8 @@ class TextDetection(object):
             #plt.title(titles[i])
             #plt.xticks([]), plt.yticks([])
             #plt.show()
-      
-        return coordinates
+
+        return coordinates, mask
 
     @staticmethod
     def bb_intersection_over_union(boxA, boxB):
@@ -90,6 +93,7 @@ class TextDetection(object):
     # return the intersection over union value
         return iou
 
+    @staticmethod
     def extract_text():
         
         tboxes_list, original_tboxes = TextDetection.openfile()
@@ -105,7 +109,7 @@ class TextDetection(object):
         metric_IoU = np.empty([30], dtype=float)
         for i in range(30):
             img = cv2.imread('qsd1_w2/{:05d}.jpg'.format(i))
-            query_tboxes[i]= TextDetection.text_detection(img)
+            query_tboxes[i]= TextDetection.text_detection(img)[0]
             metric_IoU[i]= TextDetection.bb_intersection_over_union(query_tboxes[i], original_tboxes[i])
         query_list = list(query_tboxes)
 

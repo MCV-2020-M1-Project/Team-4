@@ -71,14 +71,14 @@ def histogram_sequence(row, column):
             for i in range(range_qsd1):
                 image = cv2.imread('qsd{}_w{}/{:05d}.jpg'.format(query_set, week, i))
                 #Extract text coordinates and remove it on the image
-                coordinates = TextDetection.text_detection(image)
-                image[int(coordinates[1]-5):int(coordinates[3]+5), int(coordinates[0]-5):int(coordinates[2]+5)]= 0
-                qs1.append(HistogramGenerator.create_hists(image, row, column))
+                coordinates, mask = TextDetection.text_detection(image)
+                qs1.append(HistogramGenerator.create_hists(image, row, column, mask))
+
                 
                 
     for i in range(range_bbdd):
         image = cv2.imread('BBDD/bbdd_{:05d}.jpg'.format(i))
-        image[int(coordinates[1]-5):int(coordinates[3]+5), int(coordinates[0]-5):int(coordinates[2]+5)]= 0
+        #image[int(coordinates[1]-5):int(coordinates[3]+5), int(coordinates[0]-5):int(coordinates[2]+5)]= 0
         bbdd.append(HistogramGenerator.create_hists(image, row, column))
 
             

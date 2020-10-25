@@ -7,7 +7,7 @@ from query_images.image_utils import ImageUtils
 class HistogramGenerator(object):
 
     @staticmethod
-    def create_hists(image, row, column):
+    def create_hists(image, row, column, mask=None):
         """
         This function load an image, filtered with some basic operations and calculate some specific histograms
         :param image: image array
@@ -15,6 +15,12 @@ class HistogramGenerator(object):
         """
         height, width, dimensions = image.shape
         image = ImageUtils.normalize_image(image)
+
+        if mask is not None:
+            maskHeight, _ = mask.shape
+            if maskHeight > 250:
+                factor = maskHeight // 250
+                mask = cv.resize(mask, (width // factor, height // factor), interpolation=cv.INTER_AREA)
 
         # Number of divisions
         column = column
@@ -29,7 +35,11 @@ class HistogramGenerator(object):
                 bins = 32
 
             img_divided = ImageUtils.divide_image(image[:, :, d], row, column)
-            output_array = np.concatenate((output_array, ImageUtils.calc_hist(img_divided, bins)))
+            if mask is not None:
+                mask_divided = ImageUtils.divide_image(mask, row, column)
+                output_array = np.concatenate((output_array, ImageUtils.calc_hist(img_divided, bins, mask_divided)))
+            else:
+                output_array = np.concatenate((output_array, ImageUtils.calc_hist(img_divided, bins)))
 
         return output_array
 
