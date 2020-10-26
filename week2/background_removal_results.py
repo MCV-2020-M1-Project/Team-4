@@ -244,5 +244,5 @@ if __name__ == "__main__":
     #Write the results in a .pkl file
     pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
     f = open(pickle_file, 'wb')
-    pickle.dump((qsd2, result_10k_pkl), f, protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump((qsd2, result_10k_pkl), f, protocol=4)
     f.close
