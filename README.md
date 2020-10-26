@@ -4,3 +4,5 @@
 
 [Week 2](./week2) (Query images: Detecting texts bounds and avoid it in the histograms)
 
+[Week 3](./week3) (Noise, text descriptors, texture descriptors)
+
