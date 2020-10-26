@@ -170,5 +170,5 @@ if __name__ == "__main__":
     
     pickle_file = '{}/query{}/method{}/text_boxes.pkl'.format(results_dir, query_set, method)
     f = open(pickle_file, 'wb')
-    pickle.dump((tboxes_list, query_list), f, protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump((tboxes_list, query_list), f, protocol=4)
     f.close
