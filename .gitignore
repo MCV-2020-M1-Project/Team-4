@@ -4,3 +4,4 @@
 *.pkl
 BBDD
 **/qsd*
+**/__pycache__/*

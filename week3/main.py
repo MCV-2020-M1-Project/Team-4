@@ -19,6 +19,7 @@ import pickle
 import cv2
 import ml_metrics as metrics
 import matplotlib.pyplot as plt
+import numpy as np
 
 from query_images import DescriptorsGenerator, Distance
 from image_processing import ImageNoise, TextDetection
@@ -85,7 +86,7 @@ def histogram_noise(dataset, descriptor):
         imgWithoutNoise = cv2.imread(DATASET_FOLDER + '/non_augmented/{:05d}.jpg'.format(i))
 
         # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.GAUSSIAN)
+        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
         print(cv2.PSNR(imgWithoutNoise, img))
         print(Distance.euclidean(imgWithoutNoise, img))
         #evaluate_noise()
