@@ -1,35 +1,116 @@
+"""
+
+Usage:
+  cbir.py <weekNumber> <teamNumber> <querySet> <MethodNumber> <distanceMeasure> [--testDir=<td>]
+  cbir.py -h | --help
+
+  <weekNumber> --> Number of the week
+  <teamNumber> --> Team Number, in our case 04
+  <querySet> --> number of the query
+  <MethodNumber> --> Number of the method : 1: Divided Histogram, 2: 3d Color Histogram
+  <distanceMeasure> --> 1: Euclidean distance, 2: x^2 distance
+
+  Example of use --> python cbir.py 1 04 0 1 1 2
+
+"""
+
 from docopt import docopt
+import pickle
+import cv2
+import ml_metrics as metrics
 
+from query_images import DescriptorsGenerator, Distance
+from image_processing import ImageNoise, TextDetection
 
-def generate_results_color():
-    pass
-
+DB_FOLDER = '../BBDD'
+DATASET_FOLDER = ''
 
 def get_bbdd(folder):
-    pass
+    bbddfile = open(folder + '/relationships.pkl', 'rb')
+    bbdd1 = pickle.load(bbddfile)
+    return bbdd1
 
 
-def get_dataset(param):
-    pass
+def get_dataset(folder):
+    dataset_file = open('{}/gt_corresps.pkl'.format(folder), 'rb')
+    dataset = pickle.load(dataset_file)
+    return dataset
 
 
 def background_removal_test():
     pass
 
 
-def color_noise(dataset, method):
-    bbdd = get_bbdd('../BBDD')
-    dataset = get_dataset(dataset)
+def generate_results(dataset, bbdd_descriptors, dataset_descriptors, distance_fn):
 
-    # Compute descriptors
-    bbdd_descriptors = []
+    result_1k = []
+    result_5k = []
+    result_10k = []
+    min_val = 0
+
+    for i in range(len(dataset_descriptors)):
+
+        h1 = dataset_descriptors[i]
+        distance = {}
+        for key in range(len(bbdd_descriptors)):
+            distance[key] = distance_fn(h1, bbdd_descriptors[key])
+            min_val = min(distance.values())
+
+        x = sorted(distance, key=distance.get, reverse=False)[:5]
+        result_5k.append(x)
+        y = sorted(distance, key=distance.get, reverse=False)[:10]
+        result_10k.append(y)
+        result = [key for key, value in distance.items() if value == min_val]
+        result_1k.append(result)
+
+    score_k1 = metrics.mapk(dataset, result_1k, 1) * 100
+    score_k5 = metrics.mapk(dataset, result_5k, 5) * 100
+    score_k10 = metrics.mapk(dataset, result_10k, 10) * 100
+
+    print('Score K1 = ', score_k1, '%')
+    print('Score K5 = ', score_k5, '%')
+    print('Score K10 = ', score_k10, '%')
+
+
+def histogram_noise(dataset, descriptor):
+
     dataset_descriptors = []
+    for i in range(len(dataset)):
+        img = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(query_set, week, i))
+
+        # Preprocess pipeline
+        img = ImageNoise.remove_noise(img)
+        coordinates, mask = TextDetection.text_detection(img)
+
+        # Generate descriptors
+        dataset_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
 
     # Generate results
-    generate_results_color(bbdd_descriptors, dataset_descriptors)
+    return dataset_descriptors
 
 
-if __name__ == '__main__':
+def generate_descriptors(dataset, method=1, descriptor=1):
+
+    #Choose method to preprocess and pass descriptor id
+    if method == 1:
+        dataset_descriptors = histogram_noise(dataset, descriptor)
+    elif method == 2:
+        dataset_descriptors = histogram_noise(dataset, descriptor)#Other... change it
+
+    return dataset_descriptors
+
+def generate_db_descriptors(bbdd, descriptor=1):
+
+    # DB Descriptors
+    bbdd_descriptors = []
+    for i in range(len(bbdd)):
+        img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i))
+        bbdd_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
+
+    return bbdd_descriptors;
+
+
+if __name__ == "__main__":
     args = docopt(__doc__)
 
     week = int(args['<weekNumber>'])  # 1
@@ -38,7 +119,17 @@ if __name__ == '__main__':
     method = int(args['<MethodNumber>'])  # 1: divided_hist  2:rgb_3d
     distance_m = int(args['<distanceMeasure>'])  # 1: euclidean and 2: x^2 distance
 
-    dataset = 'qsd{}_w{}'.format(query_set, week)
+    DATASET_FOLDER = 'qsd{}_w{}'.format(query_set, week);
+    dataset = get_dataset(DATASET_FOLDER)
+    bbdd = get_bbdd(DB_FOLDER)
 
     # Call to the test
-    color_noise(dataset, method)
+    print('Generating dataset descriptors')
+    dataset_descriptors = generate_descriptors(dataset, method, DescriptorsGenerator.HISTOGRAM_CELL)
+
+    print('Generating ddbb descriptors')
+    bbdd_descriptors = generate_db_descriptors(bbdd, DescriptorsGenerator.HISTOGRAM_CELL)
+
+    # Generate results
+    print('Generating results')
+    generate_results(dataset, bbdd_descriptors, dataset_descriptors, Distance.euclidean)
