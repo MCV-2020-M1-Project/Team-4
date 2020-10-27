@@ -138,7 +138,7 @@ def generate_db_descriptors(bbdd, descriptor=1):
 
         elif descriptor == DescriptorsGenerator.TEXT:
             text = open(DB_FOLDER + '/bbdd_{:05d}.txt'.format(i), encoding='iso-8859-1')
-            text = text.readline();
+            text = text.readline().split(',')[0].replace('(', '').replace('\'', '');
             bbdd_descriptors.append(text)
 
     return bbdd_descriptors;
