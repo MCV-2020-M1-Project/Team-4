@@ -18,6 +18,7 @@ from docopt import docopt
 import pickle
 import cv2
 import ml_metrics as metrics
+import matplotlib.pyplot as plt
 
 from query_images import DescriptorsGenerator, Distance
 from image_processing import ImageNoise, TextDetection
@@ -76,11 +77,12 @@ def histogram_noise(dataset, descriptor):
 
     dataset_descriptors = []
     for i in range(len(dataset)):
-        img = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(query_set, week, i))
+        img = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(i))
 
         # Preprocess pipeline
         img = ImageNoise.remove_noise(img)
         coordinates, mask = TextDetection.text_detection(img)
+        img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
 
         # Generate descriptors
         dataset_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))

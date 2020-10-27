@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 class TextDetection(object):
 
@@ -55,13 +55,13 @@ class TextDetection(object):
             mask = (np.ones(th2.shape) * 255).astype(np.uint8)
 
         # Plot the image
-        # titles = ['Original with Bbox']
-        # images = [rgb]
-        # for i in range(1):
-        # plt.subplot(1, 1, i + 1), plt.imshow(images[i], 'gray')
-        # plt.title(titles[i])
-        # plt.xticks([]), plt.yticks([])
-        # plt.show()
+        """titles = ['Original with Bbox']
+        images = [mask]
+        for i in range(1):
+            plt.subplot(1, 1, i + 1), plt.imshow(images[i], 'gray')
+            plt.title(titles[i])
+            plt.xticks([]), plt.yticks([])
+            plt.show()"""
 
         return coordinates, mask
 
