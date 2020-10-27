@@ -89,7 +89,7 @@ def histogram_noise(dataset, descriptor):
         img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
         print(cv2.PSNR(imgWithoutNoise, img))
         print(Distance.euclidean(imgWithoutNoise, img))
-        #evaluate_noise()
+        evaluate_noise()#//TODO: Implement evaluation of noise
 
         coordinates, mask = TextDetection.text_detection(img)
         img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
@@ -100,6 +100,22 @@ def histogram_noise(dataset, descriptor):
     # Generate results
     return dataset_descriptors
 
+def text_noise(dataset, descriptor):
+
+    dataset_descriptors = []
+    for i in range(len(dataset)):
+        img = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(i))
+
+        # Preprocess pipeline
+        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
+        coordinates, mask = TextDetection.text_detection(img)
+        cropped = img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)]
+
+        # Generate descriptors
+        dataset_descriptors.append(DescriptorsGenerator.generate_descriptor(cropped, descriptor))
+
+    # Generate results
+    return dataset_descriptors
 
 def generate_descriptors(dataset, method=1, descriptor=1):
 
@@ -107,7 +123,7 @@ def generate_descriptors(dataset, method=1, descriptor=1):
     if method == 1:
         dataset_descriptors = histogram_noise(dataset, descriptor)
     elif method == 2:
-        dataset_descriptors = histogram_noise(dataset, descriptor)#Other... change it
+        dataset_descriptors = text_noise(dataset, descriptor)
 
     return dataset_descriptors
 
@@ -116,8 +132,14 @@ def generate_db_descriptors(bbdd, descriptor=1):
     # DB Descriptors
     bbdd_descriptors = []
     for i in range(len(bbdd)):
-        img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i))
-        bbdd_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
+        if descriptor == DescriptorsGenerator.HISTOGRAM_CELL:
+            img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i))
+            bbdd_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
+
+        elif descriptor == DescriptorsGenerator.TEXT:
+            text = open(DB_FOLDER + '/bbdd_{:05d}.txt'.format(i), encoding='iso-8859-1')
+            text = text.readline();
+            bbdd_descriptors.append(text)
 
     return bbdd_descriptors;
 
@@ -135,13 +157,18 @@ if __name__ == "__main__":
     dataset = get_dataset(DATASET_FOLDER)
     bbdd = get_bbdd(DB_FOLDER)
 
+    # Config
+    descriptor = DescriptorsGenerator.TEXT
+    distanceFn = Distance.levenshtein
+    method = 2
+
     # Call to the test
     print('Generating dataset descriptors')
-    dataset_descriptors = generate_descriptors(dataset, method, DescriptorsGenerator.HISTOGRAM_CELL)
+    dataset_descriptors = generate_descriptors(dataset, method, descriptor)
 
     print('Generating ddbb descriptors')
-    bbdd_descriptors = generate_db_descriptors(bbdd, DescriptorsGenerator.HISTOGRAM_CELL)
+    bbdd_descriptors = generate_db_descriptors(bbdd, descriptor)
 
     # Generate results
     print('Generating results')
-    generate_results(dataset, bbdd_descriptors, dataset_descriptors, Distance.euclidean)
+    generate_results(dataset, bbdd_descriptors, dataset_descriptors, distanceFn)
