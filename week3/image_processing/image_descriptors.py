@@ -47,7 +47,8 @@ class ImageDescriptors(object):
                 
         return full_histogram
     
-    #No funciona...
+    
+    #Buenos resultados con img2 e img3 (detalles horizontales, detalles verticales)
     @staticmethod
     def wavelet_transform(img):
         # Wavelet transform of image
@@ -57,9 +58,10 @@ class ImageDescriptors(object):
         for i in range(len(img)):
             for j in range(len(img[i])):
                 coeffs2 = pywt.dwt2(img[i][j], 'haar')
-                img2, (LH, HL, HH) = coeffs2
-                histogram, bins = np.histogram(img2.reshape(-1), 32, range=[0, 256])
+                img1, (img2, img3, img4) = coeffs2
+                histogram, bins = np.histogram(img3.reshape(-1), 32, range=[0, 256])
                 normalize = np.linalg.norm(histogram)
                 full_histogram = np.concatenate((full_histogram, (histogram/normalize)))
 
         return full_histogram
+
