@@ -22,9 +22,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from query_images import DescriptorsGenerator, Distance
-from image_processing import ImageNoise, TextDetection
+from image_processing import ImageNoise, TextDetection, ImageDescriptors
 
-DB_FOLDER = '../BBDD'
+
+DB_FOLDER = 'BBDD/'
 DATASET_FOLDER = ''
 
 def get_bbdd(folder):
@@ -41,7 +42,6 @@ def get_dataset(folder):
 
 def background_removal_test():
     pass
-
 
 def generate_results(dataset, bbdd_descriptors, dataset_descriptors, distance_fn):
 
@@ -68,6 +68,8 @@ def generate_results(dataset, bbdd_descriptors, dataset_descriptors, distance_fn
     score_k1 = metrics.mapk(dataset, result_1k, 1) * 100
     score_k5 = metrics.mapk(dataset, result_5k, 5) * 100
     score_k10 = metrics.mapk(dataset, result_10k, 10) * 100
+    print(result_10k)
+    print(dataset)
 
     print('Score K1 = ', score_k1, '%')
     print('Score K5 = ', score_k5, '%')
@@ -107,14 +109,27 @@ def text_noise(dataset, descriptor):
         img = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(i))
 
         # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
+        img = ImageNoise.remove_noise(img, ImageNoise.BILATERAL)
         coordinates, mask = TextDetection.text_detection(img)
         cropped = img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)]
-
+        try:
+            cv2.imwrite('textos{}.png'.format(i),cropped)
+        except:
+            pass
         # Generate descriptors
         dataset_descriptors.append(DescriptorsGenerator.generate_descriptor(cropped, descriptor))
 
     # Generate results
+    return dataset_descriptors
+
+def texture_descriptors(dataset, descriptor):
+    dataset_descriptors = []
+    for i in range(len(dataset)):
+        img2 = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(i),0)
+        hist = ImageDescriptors.wavelet_transform(img2)
+        # Generate descriptors    
+        dataset_descriptors.append(hist)
+        # Generate results
     return dataset_descriptors
 
 def generate_descriptors(dataset, method=1, descriptor=1):
@@ -124,6 +139,8 @@ def generate_descriptors(dataset, method=1, descriptor=1):
         dataset_descriptors = histogram_noise(dataset, descriptor)
     elif method == 2:
         dataset_descriptors = text_noise(dataset, descriptor)
+    elif method == 3:
+        dataset_descriptors = texture_descriptors(dataset, descriptor)
 
     return dataset_descriptors
 
@@ -140,6 +157,10 @@ def generate_db_descriptors(bbdd, descriptor=1):
             text = open(DB_FOLDER + '/bbdd_{:05d}.txt'.format(i), encoding='iso-8859-1')
             text = text.readline().split(',')[0].replace('(', '').replace('\'', '');
             bbdd_descriptors.append(text)
+        elif descriptor == DescriptorsGenerator.TEXTURE:
+            img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i),0)
+            hist = ImageDescriptors.wavelet_transform(img)
+            bbdd_descriptors.append(hist)
 
     return bbdd_descriptors;
 
@@ -158,17 +179,18 @@ if __name__ == "__main__":
     bbdd = get_bbdd(DB_FOLDER)
 
     # Config
-    descriptor = DescriptorsGenerator.TEXT
-    distanceFn = Distance.levenshtein
-    method = 2
+    descriptor = DescriptorsGenerator.TEXTURE
+    distanceFn = Distance.x2distance
+    method = 3
 
     # Call to the test
     print('Generating dataset descriptors')
     dataset_descriptors = generate_descriptors(dataset, method, descriptor)
+    print(dataset_descriptors)
 
     print('Generating ddbb descriptors')
     bbdd_descriptors = generate_db_descriptors(bbdd, descriptor)
-
+    print(bbdd_descriptors)
     # Generate results
     print('Generating results')
     generate_results(dataset, bbdd_descriptors, dataset_descriptors, distanceFn)
