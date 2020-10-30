@@ -22,10 +22,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from query_images import Distance
-from image_processing import ImageNoise, TextDetection, ImageDescriptors
+from image_processing import ImageNoise, TextDetection, ImageDescriptors, ImageBackgroundRemoval
 
-
-DB_FOLDER = 'BBDD/'
+DB_FOLDER = '../BBDD/'
 DATASET_FOLDER = ''
 
 def get_bbdd(folder):
@@ -75,6 +74,50 @@ def generate_results(dataset, bbdd_descriptors, dataset_descriptors, distance_fn
     print('Score K5 = ', score_k5, '%')
     print('Score K10 = ', score_k10, '%')
 
+def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distance_fn):
+
+    result_1k = []
+    result_5k = []
+    result_10k = []
+    min_val = 0
+
+    for i in range(len(dataset_descriptors)):
+        h1 = dataset_descriptors[i][0]
+        distance = {}
+        for key in range(len(bbdd_descriptors)):
+            distance[key] = distance_fn(h1, bbdd_descriptors[key])
+
+        y = sorted(distance, key=distance.get, reverse=False)[:10]
+        x = sorted(distance, key=distance.get, reverse=False)[:5]
+        z = sorted(distance, key=distance.get, reverse=False)[:1]
+        y2 = []
+        x2 = []
+        z2 = []
+
+        if len(dataset_descriptors[i]) > 1:
+            h1 = dataset_descriptors[i][1]
+            distance2 = {}
+            for key in range(len(bbdd_descriptors)):
+                distance[key] = distance_fn(h1, bbdd_descriptors[key])
+                min_val = min(distance.values())
+
+            y2 = sorted(distance2, key=distance.get, reverse=False)[:10]
+            x2 = sorted(distance2, key=distance.get, reverse=False)[:5]
+            z2 = sorted(distance2, key=distance.get, reverse=False)[:1]
+
+        result_10k.append(y+y2)
+        result_5k.append(x+x2)
+        result_1k.append(z+z2)
+
+    score_k1 = metrics.mapk(dataset, result_1k, 1) * 100
+    score_k5 = metrics.mapk(dataset, result_5k, 5) * 100
+    score_k10 = metrics.mapk(dataset, result_10k, 10) * 100
+    print(result_10k)
+    print(dataset)
+
+    print('Score K1 = ', score_k1, '%')
+    print('Score K5 = ', score_k5, '%')
+    print('Score K10 = ', score_k10, '%')
 
 def evaluate_noise():
     pass
@@ -97,7 +140,7 @@ def histogram_noise(dataset, descriptor):
         img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
 
         # Generate descriptors
-        dataset_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
+        dataset_descriptors.append(ImageDescriptors.generate_descriptor(img, descriptor))
 
     # Generate results
     return dataset_descriptors
@@ -117,7 +160,7 @@ def text_noise(dataset, descriptor):
         except:
             pass
         # Generate descriptors
-        dataset_descriptors.append(DescriptorsGenerator.generate_descriptor(cropped, descriptor))
+        dataset_descriptors.append(ImageDescriptors.generate_descriptor(cropped, descriptor))
 
     # Generate results
     return dataset_descriptors
@@ -127,7 +170,7 @@ def texture_descriptors(dataset, descriptor):
     for i in range(len(dataset)):
         img = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(i),0)
         # Generate descriptors    
-        dataset_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
+        dataset_descriptors.append(ImageDescriptors.generate_descriptor(img, descriptor))
         # Generate results
     return dataset_descriptors
 
@@ -137,19 +180,20 @@ def histogram_noise_qsd2(dataset, descriptor):
     dataset_descriptors = []
     for i in range(len(dataset)):
         img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
-        imgWithoutNoise = cv2.imread(DATASET_FOLDER + '/non_augmented/{:05d}.jpg'.format(i))
 
-        # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
-        print(cv2.PSNR(imgWithoutNoise, img))
-        print(Distance.euclidean(imgWithoutNoise, img))
-        evaluate_noise()  # //TODO: Implement evaluation of noise
-
-        coordinates, mask = TextDetection.text_detection(img)
-        img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
+        img = ImageNoise.remove_noise(img, ImageNoise.AVERAGE)
+        images = ImageBackgroundRemoval.canny(img);
 
         # Generate descriptors
-        dataset_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
+        descriptorsxImage = [];
+        for image in images:
+
+            plt.imshow(image); plt.show()
+            coordinates, mask = TextDetection.text_detection(image)
+            image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
+            descriptorsxImage.append(ImageDescriptors.generate_descriptor(image, descriptor))
+
+        dataset_descriptors.append(descriptorsxImage)
 
     # Generate results
     return dataset_descriptors
@@ -176,7 +220,7 @@ def generate_db_descriptors(bbdd, descriptor=1):
     for i in range(len(bbdd)):
         if descriptor == ImageDescriptors.HISTOGRAM_CELL:
             img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i))
-            bbdd_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
+            bbdd_descriptors.append(ImageDescriptors.generate_descriptor(img, descriptor))
 
         elif descriptor == ImageDescriptors.TEXT:
             text = open(DB_FOLDER + '/bbdd_{:05d}.txt'.format(i), encoding='iso-8859-1')
@@ -185,7 +229,7 @@ def generate_db_descriptors(bbdd, descriptor=1):
 
         elif descriptor == ImageDescriptors.TEXTURE_WAVELET:
             img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i),0)
-            bbdd_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
+            bbdd_descriptors.append(ImageDescriptors.generate_descriptor(img, descriptor))
 
     return bbdd_descriptors
 
@@ -218,4 +262,7 @@ if __name__ == "__main__":
     print(bbdd_descriptors)
     # Generate results
     print('Generating results')
-    generate_results(dataset, bbdd_descriptors, dataset_descriptors, distanceFn)
+    if query_set == 1:
+        generate_results(dataset, bbdd_descriptors, dataset_descriptors, distanceFn)
+    elif query_set == 2:
+        generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distanceFn)
