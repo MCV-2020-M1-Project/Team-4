@@ -1,2 +1,1 @@
-from query_images.descriptors_generator import DescriptorsGenerator
 from query_images.distance import Distance
