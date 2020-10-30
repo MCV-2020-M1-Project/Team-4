@@ -177,10 +177,8 @@ def histogram_noise_qsd2(dataset, descriptor):
         # Generate descriptors
         descriptorsxImage = [];
         for image in images:
-
-            plt.imshow(image); plt.show()
-            #coordinates, mask = TextDetection.text_detection(image)
-            #image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
+            coordinates, mask = TextDetection.text_detection(image)
+            image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
             descriptorsxImage.append(ImageDescriptors.generate_descriptor(image, descriptor))
 
         dataset_descriptors.append(descriptorsxImage)
@@ -233,7 +231,7 @@ if __name__ == "__main__":
     method = int(args['<MethodNumber>'])  # 1: divided_hist  2:rgb_3d
     distance_m = int(args['<distanceMeasure>'])  # 1: euclidean and 2: x^2 distance
 
-    DATASET_FOLDER = 'qsd{}_w3'.format(query_set, week);
+    DATASET_FOLDER = 'qsd{}_w{}'.format(query_set, week);
     dataset = get_dataset(DATASET_FOLDER)
     bbdd = get_bbdd(DB_FOLDER)
 

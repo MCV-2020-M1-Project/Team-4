@@ -17,8 +17,8 @@ class ImageBackgroundRemoval(object):
 
         # Apply gaussian and edges
         gaussiana = cv2.GaussianBlur(resize, (3, 3), 1.25)
-        edges = cv2.Canny(gaussiana, 50, 200)
-        edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (7,7)),iterations=1)
+        edges = cv2.Canny(gaussiana, 20, 80)
+        edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (7,7)),iterations=2)
 
         # Contours detector
         (contours, hierarchy) = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -69,6 +69,8 @@ class ImageBackgroundRemoval(object):
         images = []
         (contours, hierarchy) = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
+        contours = ImageBackgroundRemoval.sort_contours(contours)[0]
+
         definitive_contours = []
         for i in range(len(contours)):
             if hierarchy[0, i, 3] == -1:
@@ -86,3 +88,22 @@ class ImageBackgroundRemoval(object):
             images.append(cropped_img)
 
         return images
+
+    def sort_contours(cnts, method="left-to-right"):
+        # initialize the reverse flag and sort index
+        reverse = False
+        i = 0
+        # handle if we need to sort in reverse
+        if method == "right-to-left" or method == "bottom-to-top":
+            reverse = True
+        # handle if we are sorting against the y-coordinate rather than
+        # the x-coordinate of the bounding box
+        if method == "top-to-bottom" or method == "bottom-to-top":
+            i = 1
+        # construct the list of bounding boxes and sort them from top to
+        # bottom
+        boundingBoxes = [cv2.boundingRect(c) for c in cnts]
+        (cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes),
+                                            key=lambda b: b[1][i], reverse=reverse))
+        # return the list of sorted contours and bounding boxes
+        return (cnts, boundingBoxes)
