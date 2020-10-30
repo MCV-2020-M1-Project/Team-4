@@ -83,13 +83,13 @@ def histogram_noise(dataset, descriptor):
     dataset_descriptors = []
     for i in range(len(dataset)):
         img = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(i))
-        imgWithoutNoise = cv2.imread(DATASET_FOLDER + '/non_augmented/{:05d}.jpg'.format(i))
+        #imgWithoutNoise = cv2.imread(DATASET_FOLDER + '/non_augmented/{:05d}.jpg'.format(i))
 
         # Preprocess pipeline
         img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
-        print(cv2.PSNR(imgWithoutNoise, img))
-        print(Distance.euclidean(imgWithoutNoise, img))
-        evaluate_noise()#//TODO: Implement evaluation of noise
+        #print(cv2.PSNR(imgWithoutNoise, img))
+        #print(Distance.euclidean(imgWithoutNoise, img))
+        #evaluate_noise()#//TODO: Implement evaluation of noise
 
         coordinates, mask = TextDetection.text_detection(img)
         img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
@@ -158,9 +158,9 @@ if __name__ == "__main__":
     bbdd = get_bbdd(DB_FOLDER)
 
     # Config
-    descriptor = DescriptorsGenerator.TEXT
-    distanceFn = Distance.levenshtein
-    method = 2
+    descriptor = DescriptorsGenerator.HISTOGRAM_CELL
+    distanceFn = Distance.x2distance
+    method = 1
 
     # Call to the test
     print('Generating dataset descriptors')
