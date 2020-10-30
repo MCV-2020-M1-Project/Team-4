@@ -36,23 +36,30 @@ class TextDetection(object):
             # th3 = cv2.morphologyEx(th2, cv2.MORPH_OPEN, kernel)
             (contours, hierarchy) = cv2.findContours(th3, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Find the coordinates of the contours and draw it in the original image
+        mask = np.zeros((rgb.shape[0], rgb.shape[1]), dtype=np.uint8)
+        areaImg = shape[0] * shape[1]
+        areaMinImg = areaImg * 0.01
+        areaMaxImg = areaImg * 0.25
+        bestContour = None
         if len(contours) > 0:
-            c = max(contours, key=cv2.contourArea)
-            c = contours[TextDetection.eval_contours(contours, shape[1])]
-            rect = cv2.minAreaRect(c)
+            maxArea = 0
+            for c in contours:
+                area = cv2.contourArea(c)
+                if area > maxArea and area > areaMinImg and area < areaMaxImg:
+                    maxArea = area
+                    bestContour = c
+
+        if bestContour is not None:
+            rect = cv2.minAreaRect(bestContour)
             box = cv2.boxPoints(rect)
             box = np.int0(box)
-
             cv2.drawContours(rgb, [box], 0, (255, 0, 0), 2)
             x = np.array([box[0][0], box[1][0], box[2][0], box[3][0]])
             y = np.array([box[0][1], box[1][1], box[2][1], box[3][1]])
+            cv2.rectangle(mask, (min(x), min(y)), ((max(x), max(y))), (255, 255, 255), -1)
             coordinates = np.array([min(x), min(y), max(x), max(y)])
-            mask = np.zeros(th2.shape)
-            mask[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 255
         else:
             coordinates = np.zeros([4])
-            mask = (np.ones(th2.shape) * 255).astype(np.uint8)
 
         # Plot the image
         """titles = ['Original with Bbox']
@@ -64,46 +71,3 @@ class TextDetection(object):
             plt.show()"""
 
         return coordinates, mask
-
-    @staticmethod
-    def eval_contours(contours, width):
-        if len(contours) == 0: return 0
-        if len(contours) == 1: return 0
-
-        max_area = []
-        for i in range(len(contours)):
-            area = cv2.contourArea(contours[i])
-            max_area.append(area)
-
-        max_order = [0]
-        for i in range(1, len(max_area)):
-            for l in range(len(max_order) + 1):
-                if l == len(max_order):
-                    max_order.append(i)
-                    break
-                elif max_area[i] > max_area[max_order[l]]:
-                    max_order.insert(l, i)
-                    break
-
-        # Get the moments
-        mu = [None] * len(contours)
-        for i in range(len(contours)):
-            mu[i] = cv2.moments(contours[i])
-        # Get the mass centers
-        mc = [None] * len(contours)
-        for i in range(len(contours)):
-            # add 1e-5 to avoid division by zero
-            mc[i] = (mu[i]['m10'] / (mu[i]['m00'] + 1e-5), mu[i]['m01'] / (mu[i]['m00'] + 1e-5))
-
-        CM_order = [0]
-        for i in range(1, len(mc)):
-
-            for l in range(len(CM_order) + 1):
-                if l == len(CM_order):
-                    CM_order.append(i)
-                    break
-                elif abs(mc[i][0] - (width / 2)) < abs(mc[CM_order[l]][0] - (width / 2)):
-                    CM_order.insert(l, i)
-                    break
-
-        return CM_order[0]
