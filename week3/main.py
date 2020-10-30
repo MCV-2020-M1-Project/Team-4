@@ -81,37 +81,27 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
     result_10k = []
     min_val = 0
 
+    datasetGen = []
+
     for i in range(len(dataset_descriptors)):
-        h1 = dataset_descriptors[i][0]
-        distance = {}
-        for key in range(len(bbdd_descriptors)):
-            distance[key] = distance_fn(h1, bbdd_descriptors[key])
-
-        y = sorted(distance, key=distance.get, reverse=False)[:10]
-        x = sorted(distance, key=distance.get, reverse=False)[:5]
-        z = sorted(distance, key=distance.get, reverse=False)[:1]
-        y2 = []
-        x2 = []
-        z2 = []
-
-        if len(dataset_descriptors[i]) > 1:
-            h1 = dataset_descriptors[i][1]
-            distance2 = {}
+        for j in range(len(dataset_descriptors[i])):
+            h1 = dataset_descriptors[i][j]
+            datasetGen.append([dataset[i][j]])
+            distance = {}
             for key in range(len(bbdd_descriptors)):
                 distance[key] = distance_fn(h1, bbdd_descriptors[key])
-                min_val = min(distance.values())
 
-            y2 = sorted(distance2, key=distance.get, reverse=False)[:10]
-            x2 = sorted(distance2, key=distance.get, reverse=False)[:5]
-            z2 = sorted(distance2, key=distance.get, reverse=False)[:1]
+            y = sorted(distance, key=distance.get, reverse=False)[:10]
+            x = sorted(distance, key=distance.get, reverse=False)[:5]
+            z = sorted(distance, key=distance.get, reverse=False)[:1]
 
-        result_10k.append(y+y2)
-        result_5k.append(x+x2)
-        result_1k.append(z+z2)
+            result_10k.append(y)
+            result_5k.append(x)
+            result_1k.append(z)
 
-    score_k1 = metrics.mapk(dataset, result_1k, 1) * 100
-    score_k5 = metrics.mapk(dataset, result_5k, 5) * 100
-    score_k10 = metrics.mapk(dataset, result_10k, 10) * 100
+    score_k1 = metrics.mapk(datasetGen, result_1k, 1) * 100
+    score_k5 = metrics.mapk(datasetGen, result_5k, 5) * 100
+    score_k10 = metrics.mapk(datasetGen, result_10k, 10) * 100
     print(result_10k)
     print(dataset)
 
@@ -189,8 +179,8 @@ def histogram_noise_qsd2(dataset, descriptor):
         for image in images:
 
             plt.imshow(image); plt.show()
-            coordinates, mask = TextDetection.text_detection(image)
-            image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
+            #coordinates, mask = TextDetection.text_detection(image)
+            #image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
             descriptorsxImage.append(ImageDescriptors.generate_descriptor(image, descriptor))
 
         dataset_descriptors.append(descriptorsxImage)
@@ -243,7 +233,7 @@ if __name__ == "__main__":
     method = int(args['<MethodNumber>'])  # 1: divided_hist  2:rgb_3d
     distance_m = int(args['<distanceMeasure>'])  # 1: euclidean and 2: x^2 distance
 
-    DATASET_FOLDER = 'qsd{}_w{}'.format(query_set, week);
+    DATASET_FOLDER = 'qsd{}_w3'.format(query_set, week);
     dataset = get_dataset(DATASET_FOLDER)
     bbdd = get_bbdd(DB_FOLDER)
 
