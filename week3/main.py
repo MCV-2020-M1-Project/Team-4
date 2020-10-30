@@ -125,10 +125,9 @@ def text_noise(dataset, descriptor):
 def texture_descriptors(dataset, descriptor):
     dataset_descriptors = []
     for i in range(len(dataset)):
-        img2 = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(i),0)
-        hist = ImageDescriptors.wavelet_transform(img2)
+        img = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(i),0)
         # Generate descriptors    
-        dataset_descriptors.append(hist)
+        dataset_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
         # Generate results
     return dataset_descriptors
 
@@ -149,20 +148,20 @@ def generate_db_descriptors(bbdd, descriptor=1):
     # DB Descriptors
     bbdd_descriptors = []
     for i in range(len(bbdd)):
-        if descriptor == DescriptorsGenerator.HISTOGRAM_CELL:
+        if descriptor == ImageDescriptors.HISTOGRAM_CELL:
             img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i))
             bbdd_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
 
-        elif descriptor == DescriptorsGenerator.TEXT:
+        elif descriptor == ImageDescriptors.TEXT:
             text = open(DB_FOLDER + '/bbdd_{:05d}.txt'.format(i), encoding='iso-8859-1')
             text = text.readline().split(',')[0].replace('(', '').replace('\'', '');
             bbdd_descriptors.append(text)
-        elif descriptor == DescriptorsGenerator.TEXTURE:
-            img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i),0)
-            hist = ImageDescriptors.wavelet_transform(img)
-            bbdd_descriptors.append(hist)
 
-    return bbdd_descriptors;
+        elif descriptor == ImageDescriptors.TEXTURE_WAVELET:
+            img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i),0)
+            bbdd_descriptors.append(DescriptorsGenerator.generate_descriptor(img, descriptor))
+
+    return bbdd_descriptors
 
 
 if __name__ == "__main__":
@@ -179,7 +178,7 @@ if __name__ == "__main__":
     bbdd = get_bbdd(DB_FOLDER)
 
     # Config
-    descriptor = DescriptorsGenerator.TEXTURE
+    descriptor = ImageDescriptors.TEXTURE_WAVELET
     distanceFn = Distance.x2distance
     method = 3
 
