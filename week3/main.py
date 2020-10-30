@@ -172,10 +172,31 @@ def histogram_noise_qsd2(dataset, descriptor):
         img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
 
         img = ImageNoise.remove_noise(img, ImageNoise.AVERAGE)
-        images = ImageBackgroundRemoval.canny(img);
+        images = ImageBackgroundRemoval.canny(img)
 
         # Generate descriptors
-        descriptorsxImage = [];
+        descriptorsxImage = []
+        for image in images:
+            coordinates, mask = TextDetection.text_detection(image)
+            image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
+            descriptorsxImage.append(ImageDescriptors.generate_descriptor(image, descriptor))
+
+        dataset_descriptors.append(descriptorsxImage)
+
+    # Generate results
+    return dataset_descriptors
+
+def texture_noise_qsd2(dataset, descriptor):
+
+    dataset_descriptors = []
+    for i in range(len(dataset)):
+        img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
+
+        img = ImageNoise.remove_noise(img, ImageNoise.AVERAGE)
+        images = ImageBackgroundRemoval.canny(img)
+
+        # Generate descriptors
+        descriptorsxImage = []
         for image in images:
             coordinates, mask = TextDetection.text_detection(image)
             image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
@@ -198,6 +219,8 @@ def generate_descriptors(dataset, method=1, descriptor=1):
         dataset_descriptors = texture_descriptors(dataset, descriptor)
     elif method == 4:
         dataset_descriptors = histogram_noise_qsd2(dataset, descriptor)
+    elif method == 5:
+        dataset_descriptors = texture_noise_qsd2(dataset, descriptor)
 
     return dataset_descriptors
 
@@ -236,9 +259,9 @@ if __name__ == "__main__":
     bbdd = get_bbdd(DB_FOLDER)
 
     # Config
-    descriptor = ImageDescriptors.HISTOGRAM_CELL
+    descriptor = ImageDescriptors.TEXTURE_WAVELET
     distanceFn = Distance.x2distance
-    method = 4
+    method = 5
 
     # Call to the test
     print('Generating dataset descriptors')
