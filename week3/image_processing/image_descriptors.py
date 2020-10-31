@@ -71,7 +71,7 @@ class ImageDescriptors(object):
         if image.shape[0] == 0 or image.shape[1] == 0:
             return ""
 
-        return pytesseract.image_to_string(image)
+        return pytesseract.image_to_string(image).replace('\x0c','').replace('\n','')
     
     #Resultados muy bajos, falta lo del zigzag que no lo acabo de ver.
     @staticmethod

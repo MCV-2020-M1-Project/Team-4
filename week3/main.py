@@ -142,7 +142,7 @@ def text_noise(dataset, descriptor):
         img = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(i))
 
         # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.BILATERAL)
+        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
         coordinates, mask = TextDetection.text_detection(img)
         cropped = img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)]
         try:
@@ -231,12 +231,22 @@ def generate_db_descriptors(bbdd, descriptor=1):
     for i in range(len(bbdd)):
         if descriptor == ImageDescriptors.TEXT:
             text = open(DB_FOLDER + '/bbdd_{:05d}.txt'.format(i), encoding='iso-8859-1')
-            text = text.readline().split(',')[0].replace('(', '').replace('\'', '');
-            bbdd_descriptors.append(text)
+            #text = text.readline().split(',')[0].replace('(', '').replace('\'', '')
+            author_title = text.readline().split(',')
+            if len(author_title) == 0:
+                author = ''
+                title = ''
+            elif len(author_title) < 2:
+                author = author_title[0]
+                title = ''
+            else:
+                author = author_title[0].replace('(','').replace('\'','')
+                title = author_title[1].replace(')','').replace('\'','')
+            bbdd_descriptors.append(author.replace('\n',''))
         else:
             img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i))
             bbdd_descriptors.append(ImageDescriptors.generate_descriptor(img, descriptor))
-
+    print('text = ', bbdd_descriptors)
     return bbdd_descriptors
 
 
@@ -254,9 +264,9 @@ if __name__ == "__main__":
     bbdd = get_bbdd(DB_FOLDER)
 
     # Config
-    descriptor = ImageDescriptors.HISTOGRAM_TEXTURE_WAVELET
-    distanceFn = Distance.x2distance
-    method = 4
+    descriptor = ImageDescriptors.TEXT
+    distanceFn = Distance.levenshtein
+    method = 2
 
     # Call to the test
     print('Generating dataset descriptors')
