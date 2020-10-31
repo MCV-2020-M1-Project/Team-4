@@ -10,7 +10,7 @@ Usage:
   <MethodNumber> --> Number of the method : 1: Divided Histogram, 2: 3d Color Histogram
   <distanceMeasure> --> 1: Euclidean distance, 2: x^2 distance
 
-  Example of use --> python cbir.py 1 04 0 1 1 2
+  Example of use --> python main.py 1 04 1 1 2
 
 """
 
