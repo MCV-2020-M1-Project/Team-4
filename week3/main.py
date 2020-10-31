@@ -113,7 +113,7 @@ def evaluate_noise():
     pass
 
 
-def histogram_noise(dataset, descriptor):
+def simple_descriptor(dataset, descriptor):
 
     dataset_descriptors = []
     for i in range(len(dataset)):
@@ -212,7 +212,7 @@ def generate_descriptors(dataset, method=1, descriptor=1):
 
     #Choose method to preprocess and pass descriptor id
     if method == 1:
-        dataset_descriptors = histogram_noise(dataset, descriptor)
+        dataset_descriptors = simple_descriptor(dataset, descriptor)
     elif method == 2:
         dataset_descriptors = text_noise(dataset, descriptor)
     elif method == 3:
@@ -229,17 +229,12 @@ def generate_db_descriptors(bbdd, descriptor=1):
     # DB Descriptors
     bbdd_descriptors = []
     for i in range(len(bbdd)):
-        if descriptor == ImageDescriptors.HISTOGRAM_CELL:
-            img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i))
-            bbdd_descriptors.append(ImageDescriptors.generate_descriptor(img, descriptor))
-
-        elif descriptor == ImageDescriptors.TEXT:
+        if descriptor == ImageDescriptors.TEXT:
             text = open(DB_FOLDER + '/bbdd_{:05d}.txt'.format(i), encoding='iso-8859-1')
             text = text.readline().split(',')[0].replace('(', '').replace('\'', '');
             bbdd_descriptors.append(text)
-
-        elif descriptor == ImageDescriptors.TEXTURE_WAVELET:
-            img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i),0)
+        else:
+            img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i))
             bbdd_descriptors.append(ImageDescriptors.generate_descriptor(img, descriptor))
 
     return bbdd_descriptors
@@ -259,9 +254,9 @@ if __name__ == "__main__":
     bbdd = get_bbdd(DB_FOLDER)
 
     # Config
-    descriptor = ImageDescriptors.TEXTURE_WAVELET
+    descriptor = ImageDescriptors.HISTOGRAM_TEXTURE_WAVELET
     distanceFn = Distance.x2distance
-    method = 5
+    method = 4
 
     # Call to the test
     print('Generating dataset descriptors')

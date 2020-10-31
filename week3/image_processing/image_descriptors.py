@@ -17,6 +17,7 @@ class ImageDescriptors(object):
     TEXTURE_COSINE = 3
     TEXTURE_LOCAL_BINARY = 4
     TEXTURE_WAVELET = 5
+    HISTOGRAM_TEXTURE_WAVELET = 6
 
     @staticmethod
     def generate_descriptor(image, method=1, cellSize=(10, 10)):
@@ -34,6 +35,9 @@ class ImageDescriptors(object):
 
         elif method == ImageDescriptors.TEXTURE_WAVELET:
             return ImageDescriptors.wavelet_transform(image)
+
+        elif method == ImageDescriptors.HISTOGRAM_TEXTURE_WAVELET:
+            return ImageDescriptors.histo_wavelet_transform(image, cellSize)
 
     @staticmethod
     def histogramCell(image, cellSize=(10, 10)):
@@ -122,4 +126,10 @@ class ImageDescriptors(object):
                 full_histogram = np.concatenate((full_histogram, (histogram/normalize)))
 
         return full_histogram
+
+    @staticmethod
+    def histo_wavelet_transform(image, cellSize):
+        histoDesc = ImageDescriptors.histogramCell(image, cellSize)
+        waveletDesc = ImageDescriptors.wavelet_transform(image)
+        return np.concatenate((histoDesc, waveletDesc))
 
