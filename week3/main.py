@@ -240,7 +240,7 @@ def texture_descriptors(dataset, descriptor):
         # Generate results
     return dataset_descriptors
 
- def two_descriptors(dataset, descriptor):
+def two_descriptors(dataset, descriptor):
 
     dataset_descriptors1 = []
     dataset_descriptors2 = []
@@ -444,15 +444,15 @@ if __name__ == "__main__":
     
     descriptor = ImageDescriptors.HISTOGRAM_TEXT
     distanceFn = Distance.x2distance
-    method = 6
+    method = 4
     distanceFn2 = Distance.levenshtein
 
     # Call to the test
     print('Generating dataset descriptors')
     if method > 5:
-         bbdd_descriptors1, bbdd_descriptors2 = generate_db_descriptors(bbdd, descriptor)
+         dataset_descriptors1, bbdd_descriptors2 = generate_descriptors(dataset, descriptor)
     else:
-        bbdd_descriptors = generate_db_descriptors(bbdd, descriptor)
+        dataset_descriptors = generate_descriptors(dataset, descriptor)
     #print(dataset_descriptors)
 
     print('Generating ddbb descriptors')
