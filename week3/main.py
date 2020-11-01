@@ -482,6 +482,14 @@ def generate_db_descriptors(bbdd, descriptor=1):
             
             img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i))
             bbdd_descriptors1.append(ImageDescriptors.generate_descriptor(img, ImageDescriptors.HISTOGRAM_CELL))
+        #TEXT+COLOR+TEXTURE QSD2
+        elif method == 10:
+            text = open(DB_FOLDER + '/bbdd_{:05d}.txt'.format(i), encoding='iso-8859-1')
+            text = text.readline().split(',')[0].replace('(', '').replace('\'', '');
+            bbdd_descriptors2.append(text)
+            
+            img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i))
+            bbdd_descriptors1.append(ImageDescriptors.generate_descriptor(img, ImageDescriptors.HISTOGRAM_TEXTURE_WAVELET))
         else:
             img = cv2.imread(DB_FOLDER + '/bbdd_{:05d}.jpg'.format(i))
             bbdd_descriptors.append(ImageDescriptors.generate_descriptor(img, descriptor)) 
@@ -519,7 +527,7 @@ if __name__ == "__main__":
     TEXTURE_WAVELET_TEXT --> method = 7
     HISTOGRAM_TEXT_TEXTURE --> method = 8
     HISTOGRAM_TEXT QSD2 --> method = 9
-    
+    HISTOGRAM_TEXT_TEXTURE QSD2 --> method = 10
     '''
     
     descriptor = ImageDescriptors.TEXTURE_WAVELET
