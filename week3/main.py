@@ -13,7 +13,7 @@ Usage:
   Example of use --> python cbir.py 1 04 0 1 1 2
 
 """
-
+import imutils
 from docopt import docopt
 import pickle
 import cv2
@@ -82,11 +82,13 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
     min_val = 0
 
     datasetGen = []
+    for i in range(len(dataset)):
+        for j in range(len(dataset[i])):
+            datasetGen.append([dataset[i][j]])
 
     for i in range(len(dataset_descriptors)):
         for j in range(len(dataset_descriptors[i])):
             h1 = dataset_descriptors[i][j]
-            datasetGen.append([dataset[i][j]])
             distance = {}
             for key in range(len(bbdd_descriptors)):
                 distance[key] = distance_fn(h1, bbdd_descriptors[key])
@@ -118,13 +120,13 @@ def simple_descriptor(dataset, descriptor):
     dataset_descriptors = []
     for i in range(len(dataset)):
         img = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(i))
-        imgWithoutNoise = cv2.imread(DATASET_FOLDER + '/non_augmented/{:05d}.jpg'.format(i))
+        ##imgWithoutNoise = cv2.imread(DATASET_FOLDER + '/non_augmented/{:05d}.jpg'.format(i))
 
         # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
-        print(cv2.PSNR(imgWithoutNoise, img))
-        print(Distance.euclidean(imgWithoutNoise, img))
-        evaluate_noise()#//TODO: Implement evaluation of noise
+        #img = ImageNoise.remove_noise(img, ImageNoise.AVERAGE)
+        ##print(cv2.PSNR(imgWithoutNoise, img))
+        ##print(Distance.euclidean(imgWithoutNoise, img))
+        ##evaluate_noise()#//TODO: Implement evaluation of noise
 
         coordinates, mask = TextDetection.text_detection(img)
         img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
@@ -165,48 +167,36 @@ def texture_descriptors(dataset, descriptor):
     return dataset_descriptors
 
 
-def histogram_noise_qsd2(dataset, descriptor):
+def descriptor_noise_qsd2(dataset, descriptor):
 
     dataset_descriptors = []
+    qt = 0
     for i in range(len(dataset)):
         img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
 
-        img = ImageNoise.remove_noise(img, ImageNoise.AVERAGE)
+        """plt.imshow(img)
+        plt.show()"""
+
+        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN, 5)
         images = ImageBackgroundRemoval.canny(img)
+        qt += len(images)
 
         # Generate descriptors
         descriptorsxImage = []
         for image in images:
+
+            image = imutils.resize(image, width=img.shape[0] // 4)
             coordinates, mask = TextDetection.text_detection(image)
-            image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
+            image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 255
+           # plt.imshow(image);plt.show();
             descriptorsxImage.append(ImageDescriptors.generate_descriptor(image, descriptor))
 
         dataset_descriptors.append(descriptorsxImage)
 
-    # Generate results
-    return dataset_descriptors
-
-def texture_noise_qsd2(dataset, descriptor):
-
-    dataset_descriptors = []
-    for i in range(len(dataset)):
-        img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
-
-        img = ImageNoise.remove_noise(img, ImageNoise.AVERAGE)
-        images = ImageBackgroundRemoval.canny(img)
-
-        # Generate descriptors
-        descriptorsxImage = []
-        for image in images:
-            coordinates, mask = TextDetection.text_detection(image)
-            image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
-            descriptorsxImage.append(ImageDescriptors.generate_descriptor(image, descriptor))
-
-        dataset_descriptors.append(descriptorsxImage)
+    print(qt)
 
     # Generate results
     return dataset_descriptors
-
 
 def generate_descriptors(dataset, method=1, descriptor=1):
 
@@ -218,9 +208,7 @@ def generate_descriptors(dataset, method=1, descriptor=1):
     elif method == 3:
         dataset_descriptors = texture_descriptors(dataset, descriptor)
     elif method == 4:
-        dataset_descriptors = histogram_noise_qsd2(dataset, descriptor)
-    elif method == 5:
-        dataset_descriptors = texture_noise_qsd2(dataset, descriptor)
+        dataset_descriptors = descriptor_noise_qsd2(dataset, descriptor)
 
     return dataset_descriptors
 

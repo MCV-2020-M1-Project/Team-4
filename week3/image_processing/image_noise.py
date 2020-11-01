@@ -7,13 +7,13 @@ class ImageNoise(object):
     MEDIAN = 3
 
     @staticmethod
-    def remove_noise(img, method=1):
+    def remove_noise(img, method=1, size=5):
         if method == ImageNoise.GAUSSIAN:
             return ImageNoise.remove_noise_gaussian(img)
         elif method == ImageNoise.AVERAGE:
             return ImageNoise.remove_noise_average(img)
         elif method == ImageNoise.MEDIAN:
-            return ImageNoise.remove_noise_median(img)
+            return ImageNoise.remove_noise_median(img, size)
 
         return img
 
@@ -26,5 +26,5 @@ class ImageNoise(object):
         return cv2.blur(img, (3, 3))
 
     @staticmethod
-    def remove_noise_median(img):
-        return cv2.medianBlur(img, 5)
+    def remove_noise_median(img, size):
+        return cv2.medianBlur(img, size)

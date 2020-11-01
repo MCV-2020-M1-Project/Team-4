@@ -3,13 +3,19 @@ import imutils
 import numpy as np
 import matplotlib.pyplot as plt
 
+from image_processing import ImageNoise
+
 
 class ImageBackgroundRemoval(object):
 
     def canny(image, show_output=False):
 
         # Convert to gray
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)[:, :, 1]
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)[:, :, 2]
+        gray = ImageNoise.remove_noise(gray, ImageNoise.MEDIAN, 9)
+        th2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, \
+                                    cv2.THRESH_BINARY, 11, 2)
+        plt.imshow(gray, 'gray');plt.show();
 
         # Resize
         resize = imutils.resize(gray, width=gray.shape[1]//2)
@@ -17,24 +23,26 @@ class ImageBackgroundRemoval(object):
 
         # Apply gaussian and edges
         gaussiana = cv2.GaussianBlur(resize, (3, 3), 1.25)
-        edges = cv2.Canny(gaussiana, 20, 80)
+        edges = cv2.Canny(gaussiana, 0, 200)
         edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (7,7)),iterations=2)
 
         # Contours detector
         (contours, hierarchy) = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         definitive_contours = []
         for i in range(len(contours)):
-            if hierarchy[0, i, 3] == -1:
+            if hierarchy[0, i, 3] == -1 and cv2.contourArea(contours[i]) > gray.shape[1]*2:
                definitive_contours.append(contours[i])
 
         # Generate mask
         mask = ImageBackgroundRemoval.generate_mask(image, definitive_contours, ratio)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7)),
+                                 iterations=2)
         imgCrop = ImageBackgroundRemoval.crop_with_mask(image, mask);
 
-        """plt.imshow(mask, 'gray');plt.show();
+        plt.imshow(mask, 'gray');plt.show();
         plt.imshow(imgCrop[0]);plt.show()
         if(len(imgCrop) > 1):
-            plt.imshow(imgCrop[1]);plt.show()"""
+            plt.imshow(imgCrop[1]);plt.show()
 
         return imgCrop
 
@@ -67,25 +75,29 @@ class ImageBackgroundRemoval(object):
     def crop_with_mask(image, mask):
 
         images = []
-        (contours, hierarchy) = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        (contours, hierarchy) = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         contours = ImageBackgroundRemoval.sort_contours(contours)[0]
 
-        definitive_contours = []
-        for i in range(len(contours)):
-            if hierarchy[0, i, 3] == -1:
-               definitive_contours.append(contours[i])
-
-        for c in definitive_contours:
-            rect = cv2.minAreaRect(c)
+        for c in contours:
+            """rect = cv2.minAreaRect(c)
             box = cv2.boxPoints(rect)
             box = np.int0(box)
             x = np.array([box[0][0], box[1][0], box[2][0], box[3][0]])
-            y = np.array([box[0][1], box[1][1], box[2][1], box[3][1]])
+            y = np.array([box[0][1], box[1][1], box[2][1], box[3][1]])"""
+            subMask = np.zeros(image.shape[:-1])
+            cv2.drawContours(subMask, [c], -1, 255, -1)
+            out = np.zeros_like(image)  # Extract out the object and place into output image
+            out[subMask == 255] = image[subMask == 255]
 
-            cropped_img = image[min(y):max(y), min(x):max(x)]
+            (y, x) = np.where(subMask == 255)
+            (topy, topx) = (np.min(y), np.min(x))
+            (bottomy, bottomx) = (np.max(y), np.max(x))
+            out = image[topy:bottomy + 1, topx:bottomx + 1]
 
-            images.append(cropped_img)
+            #cropped_img = image[min(y):max(y), min(x):max(x)]
+
+            images.append(out)
 
         return images
 
