@@ -429,15 +429,18 @@ if __name__ == "__main__":
     # Config
     '''
     HISTOGRAM_CELL --> method = 1
+    HISTOGRAM_TEXTURE_WAVELET --> method = 1
     TEXT --> method = 2
-    TEXTURE_COSINE --> method = 3
-    TEXTURE_LOCAL_BINARY --> method = 3
-    TEXTURE_WAVELET --> method = 3
-    HISTOGRAM_TEXTURE_WAVELET --> method = 4
+    TEXTURE_LOCAL_BINARY --> method = 3 (Te problemes )
+    TEXTURE_WAVELET --> method = 3 (Te problemes)
+    HISTOGRAM_TEXTURE_WAVELET QSD2 --> method = 4
+    HISTOGRAM_CELL QSD2 --> method = 4
+    TEXTURE_WAVELET QSD2 --> method = 5
     HISTOGRAM_TEXT --> method = 6
     TEXTURE_WAVELET_TEXT --> method = 7
     HISTOGRAM_TEXT_TEXTURE --> method = 8
     HISTOGRAM_TEXT QSD2 --> method = 9
+
     
     distanceFn2 = Distance.levenshtein
     '''
