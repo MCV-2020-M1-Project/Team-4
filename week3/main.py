@@ -310,11 +310,13 @@ def two_descriptors_qsd2(dataset, descriptor):
         # Preprocess pipeline
         img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
         images = ImageBackgroundRemoval.canny(img)
-        descriptorsxImage = []
+        
         for image in images:
+            descriptorsxImage = []
             coordinates, mask = TextDetection.text_detection(image)
             cropped = image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)]
             descriptorsxImage.append(ImageDescriptors.generate_descriptor(cropped, method = 2))
+            
             dataset_descriptors2.append(descriptorsxImage)
         
     for i in range(len(dataset)):
