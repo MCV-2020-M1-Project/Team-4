@@ -450,7 +450,7 @@ if __name__ == "__main__":
     # Call to the test
     print('Generating dataset descriptors')
     if method > 5:
-         dataset_descriptors1, bbdd_descriptors2 = generate_descriptors(dataset, descriptor)
+         dataset_descriptors1, dataset_descriptors2 = generate_descriptors(dataset, descriptor)
     else:
         dataset_descriptors = generate_descriptors(dataset, descriptor)
     #print(dataset_descriptors)
