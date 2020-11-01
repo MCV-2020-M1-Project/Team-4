@@ -15,15 +15,15 @@ class ImageBackgroundRemoval(object):
         gray = ImageNoise.remove_noise(gray, ImageNoise.MEDIAN, 9)
         th2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, \
                                     cv2.THRESH_BINARY, 11, 2)
-        plt.imshow(gray, 'gray');plt.show();
+        #plt.imshow(gray, 'gray');plt.show();
 
         # Resize
         resize = imutils.resize(gray, width=gray.shape[1]//2)
         ratio = image.shape[0] / resize.shape[0]
 
         # Apply gaussian and edges
-        gaussiana = cv2.GaussianBlur(resize, (3, 3), 1.25)
-        edges = cv2.Canny(gaussiana, 0, 200)
+        gaussiana = cv2.GaussianBlur(resize, (1, 1), 1.25)
+        edges = cv2.Canny(gaussiana, 50, 200)
         edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (7,7)),iterations=2)
 
         # Contours detector
@@ -39,10 +39,10 @@ class ImageBackgroundRemoval(object):
                                  iterations=2)
         imgCrop = ImageBackgroundRemoval.crop_with_mask(image, mask);
 
-        plt.imshow(mask, 'gray');plt.show();
-        plt.imshow(imgCrop[0]);plt.show()
-        if(len(imgCrop) > 1):
-            plt.imshow(imgCrop[1]);plt.show()
+        #plt.imshow(mask, 'gray');plt.show();
+        #plt.imshow(imgCrop[0]);plt.show()
+        #if(len(imgCrop) > 1):
+        #    plt.imshow(imgCrop[1]);plt.show()
 
         return imgCrop
 
