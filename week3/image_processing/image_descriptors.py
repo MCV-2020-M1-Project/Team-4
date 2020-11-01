@@ -10,6 +10,20 @@ import pywt
 from image_processing.image_utils import ImageUtils
 
 
+import matplotlib.pyplot as plt
+import numpy as np
+import cv2 as cv2
+import os
+import skimage
+import pytesseract
+from skimage.feature import local_binary_pattern as lbp
+from scipy.fftpack import fft, dct
+import pywt
+from image_processing.image_utils import ImageUtils
+from image_processing.image_noise import ImageNoise
+from image_processing.text_detection import TextDetection
+
+
 class ImageDescriptors(object):
 
     HISTOGRAM_CELL = 1
@@ -18,9 +32,13 @@ class ImageDescriptors(object):
     TEXTURE_LOCAL_BINARY = 4
     TEXTURE_WAVELET = 5
     HISTOGRAM_TEXTURE_WAVELET = 6
+    HISTOGRAM_TEXT = 7
+    TEXTURE_WAVELET_TEXT = 8
+    HISTOGRAM_TEXT_TEXTURE = 9
+    
 
     @staticmethod
-    def generate_descriptor(image, method=1, cellSize=(10, 10)):
+    def generate_descriptor(image,  method=1, cellSize=(10, 10)):
         if method == ImageDescriptors.HISTOGRAM_CELL:
             return ImageDescriptors.histogramCell(image, cellSize)
 
@@ -38,7 +56,15 @@ class ImageDescriptors(object):
 
         elif method == ImageDescriptors.HISTOGRAM_TEXTURE_WAVELET:
             return ImageDescriptors.histo_wavelet_transform(image, cellSize)
-
+        
+        elif method == ImageDescriptors.HISTOGRAM_TEXT:
+            return ImageDescriptors.histo_text(image, cellSize)
+        
+        elif method == ImageDescriptors.TEXTURE_WAVELET_TEXT:
+            return ImageDescriptors.texture_text(image, cellSize) 
+        
+        elif method == ImageDescriptors.HISTOGRAM_TEXT_TEXTURE:
+            return ImageDescriptors.texture_text_hist(image, cellSize)   
     @staticmethod
     def histogramCell(image, cellSize=(10, 10)):
 
@@ -71,7 +97,7 @@ class ImageDescriptors(object):
         if image.shape[0] == 0 or image.shape[1] == 0:
             return ""
 
-        return pytesseract.image_to_string(image).replace('\x0c','').replace('\n','')
+        return pytesseract.image_to_string(image)
     
     #Resultados muy bajos, falta lo del zigzag que no lo acabo de ver.
     @staticmethod
@@ -132,4 +158,20 @@ class ImageDescriptors(object):
         histoDesc = ImageDescriptors.histogramCell(image, cellSize)
         waveletDesc = ImageDescriptors.wavelet_transform(image)
         return np.concatenate((histoDesc, waveletDesc))
+    
+    @staticmethod
+    def histo_text(image, cellSize):
+        coordinates, mask = TextDetection.text_detection(image)
+        image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
+        histoDesc = ImageDescriptors.histogramCell(image, cellSize)
+        return histoDesc
+    
+    @staticmethod
+    def texture_text(image, cellSize):
+        textureDesc = ImageDescriptors.wavelet_transform(image)
+        return textureDesc
+    
+    @staticmethod
+    def texture_text_hist(image, cellSize):
+        return ImageDescriptors.histo_wavelet_transform(image, cellSize)
 
