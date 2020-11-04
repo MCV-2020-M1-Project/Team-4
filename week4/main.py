@@ -406,6 +406,8 @@ def histogram_noise_qsd2(dataset, descriptor):
         img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
         images = ImageBackgroundRemoval.canny(img)
 
+        print(str(i)+" "+str(len(images)))
+
         # Generate descriptors
         descriptorsxImage = []
         for image in images:
@@ -566,9 +568,9 @@ if __name__ == "__main__":
     HISTOGRAM_TEXT_TEXTURE QSD2 --> method = 10
     '''
 
-    descriptor = ImageDescriptors.TEXTURE_WAVELET
+    descriptor = ImageDescriptors.HISTOGRAM_TEXTURE_WAVELET
     distanceFn = Distance.x2distance
-    method = 3
+    method = 4
     distanceFn2 = Distance.levenshtein
 
     # Call to the test
