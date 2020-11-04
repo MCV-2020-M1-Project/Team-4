@@ -20,13 +20,11 @@ class ImageBackgroundRemoval(object):
         ratio = image.shape[0] / resize.shape[0]
 
         # Apply gaussian and edges
-        resize = ImageNoise.remove_noise(resize, ImageNoise.MEDIAN, 7)
+        resize = ImageNoise.remove_noise(resize, ImageNoise.MEDIAN, 11)
         # gaussiana = cv2.GaussianBlur(resize, (1, 1), 1.25)
-        edges = cv2.Canny(resize, 50, 125)
+        edges = cv2.Canny(resize, 0, 125)
         edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7)),
                                  iterations=3)
-        plt.imshow(edges, 'gray')
-        plt.show()
 
         # Contours detector
         (contours, hierarchy) = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -111,3 +109,5 @@ class ImageBackgroundRemoval(object):
                                             key=lambda b: b[1][i], reverse=reverse))
         # return the list of sorted contours and bounding boxes
         return (cnts, boundingBoxes)
+
+

@@ -400,6 +400,7 @@ def texture_descriptors(dataset, descriptor):
 
 def histogram_noise_qsd2(dataset, descriptor):
     dataset_descriptors = []
+    c = 0
     for i in range(len(dataset)):
         img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
 
@@ -407,6 +408,7 @@ def histogram_noise_qsd2(dataset, descriptor):
         images = ImageBackgroundRemoval.canny(img)
 
         print(str(i)+" "+str(len(images)))
+        c += len(images)
 
         # Generate descriptors
         descriptorsxImage = []
@@ -416,6 +418,8 @@ def histogram_noise_qsd2(dataset, descriptor):
             descriptorsxImage.append(ImageDescriptors.generate_descriptor(image, descriptor))
 
         dataset_descriptors.append(descriptorsxImage)
+
+    print("TOTALL "+str(c))
 
     # Generate results
     return dataset_descriptors
