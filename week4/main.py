@@ -42,50 +42,7 @@ def get_dataset(folder):
     return dataset
 
 
-def background_removal_test():
-    pass
-
-
-def generate_results(dataset, bbdd_descriptors, dataset_descriptors, distance_fn):
-    result_1k = []
-    result_5k = []
-    result_10k = []
-    min_val = 0
-
-    for i in range(len(dataset_descriptors)):
-
-        h1 = dataset_descriptors[i]
-        distance = {}
-        for key in range(len(bbdd_descriptors)):
-            distance[key] = distance_fn(h1, bbdd_descriptors[key])
-            min_val = min(distance.values())
-
-        x = sorted(distance, key=distance.get, reverse=False)[:5]
-        result_5k.append(x)
-        y = sorted(distance, key=distance.get, reverse=False)[:10]
-        result_10k.append(y)
-        result = [key for key, value in distance.items() if value == min_val]
-        result_1k.append(result)
-
-    score_k1 = metrics.mapk(dataset, result_1k, 1) * 100
-    score_k5 = metrics.mapk(dataset, result_5k, 5) * 100
-    score_k10 = metrics.mapk(dataset, result_10k, 10) * 100
-    print(result_10k)
-    print(dataset)
-
-    print('Score K1 = ', score_k1, '%')
-    print('Score K5 = ', score_k5, '%')
-    print('Score K10 = ', score_k10, '%')
-
-    # results_dir = "/Users/eudal/PycharmProjects/Master/Team-4/week3"
-
-    pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
-    f = open(pickle_file, 'wb')
-    pickle.dump((result_10k), f, protocol=4)
-    f.close
-
-
-def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distance_fn):
+def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distance_fn, minValue = 4):
     result_1k = []
     result_5k = []
     result_10k = []
@@ -104,15 +61,23 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
             h1 = dataset_descriptors[i][j]
             distance = {}
             for key in range(len(bbdd_descriptors)):
-                distance[key] = distance_fn(h1, bbdd_descriptors[key])
+                distanceValue = distance_fn(h1, bbdd_descriptors[key])
+                if distanceValue > minValue:
+                    distance[key] = distanceValue
 
-            y = sorted(distance, key=distance.get, reverse=True)[:10]
-            x = sorted(distance, key=distance.get, reverse=True)[:5]
-            z = sorted(distance, key=distance.get, reverse=True)[:1]
-            y2.append(y)
-            result_10k.append(y)
-            result_5k.append(x)
-            result_1k.append(z)
+            if len(distance) > 0:
+                y = sorted(distance, key=distance.get, reverse=True)[:10]
+                x = sorted(distance, key=distance.get, reverse=True)[:5]
+                z = sorted(distance, key=distance.get, reverse=True)[:1]
+                y2.append(y)
+                result_10k.append(y)
+                result_5k.append(x)
+                result_1k.append(z)
+            else:
+                result_10k.append([-1])
+                result_5k.append([-1])
+                result_1k.append([-1])
+
         # print(y2)
         results_10k2d.append(y2)
 
