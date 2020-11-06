@@ -5,6 +5,7 @@ import cv2 as cv2
 import os
 import skimage
 import pytesseract
+from skimage import feature
 from skimage.feature import local_binary_pattern as lbp
 from scipy.fftpack import fft, dct
 import pywt
@@ -39,6 +40,7 @@ class ImageDescriptors(object):
     # Local descriptors descriptors
     SIFT = 10
     HOG = 11
+    LBP = 12
 
     @staticmethod
     def generate_descriptor(image, method=1, cellSize=(10, 10)):
@@ -74,6 +76,9 @@ class ImageDescriptors(object):
 
         elif method == ImageDescriptors.HOG:
             return ImageDescriptors.hog(image)
+
+        elif method == ImageDescriptors.LBP:
+            return ImageDescriptors.lbp(image)
 
     @staticmethod
     def histogramCell(image, cellSize=(10, 10)):
@@ -206,10 +211,29 @@ class ImageDescriptors(object):
     @staticmethod
     def hog(image):
 
+        eps = 1e-7
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        gray = cv2.resize(gray, (200, 200), interpolation=cv2.INTER_AREA)
+        gray = imutils.resize(gray, width=gray.shape[1]//4)
 
-        fd = hog(gray, orientations=9, pixels_per_cell=(4, 4),
-                            cells_per_block=(4, 4), visualize=False, multichannel=False, feature_vector=True)
+        fd = hog(gray, feature_vector=True)
 
-        return fd
+        (hist, _) = np.histogram(fd, bins=8*8, range=(0, 9))
+
+        return hist
+
+    @staticmethod
+    def lbp(image):
+
+        eps = 1e-7
+
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        lbp = feature.local_binary_pattern(gray, 8,  1, method="uniform")
+        (hist, _) = np.histogram(lbp.ravel(),
+                                 bins=np.arange(0, 8 + 3),
+                                 range=(0, 8 + 2))
+        # normalize the histogram
+        hist = hist.astype("float")
+        hist /= (hist.sum() + eps)
+        # return the histogram of Local Binary Patterns
+        return hist

@@ -62,11 +62,12 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
             distance = {}
             for key in range(len(bbdd_descriptors)):
                 distanceValue = distance_fn(h1, bbdd_descriptors[key])
+                print(distanceValue)
                 if reverse:
-                    if distanceValue < minValue:
+                    if distanceValue < minMaxValue:
                         distance[key] = distanceValue
                 else:
-                    if distanceValue > minValue:
+                    if distanceValue > minMaxValue:
                         distance[key] = distanceValue
 
             if len(distance) > 0:
@@ -101,101 +102,6 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
     f = open(pickle_file, 'wb')
     pickle.dump((results_10k2d), f, protocol=4)
     f.close"""
-
-
-def generate_results_two_descriptors(dataset, bbdd_descriptors, dataset_descriptors, distance_fn, bbdd_descriptors2,
-                                     dataset_descriptors2, distance_fn2):
-    result_1k = []
-    result_5k = []
-    result_10k = []
-    min_val = 0
-
-    for i in range(len(dataset_descriptors)):
-        distance = {}
-        for key in range(len(bbdd_descriptors)):
-            h1 = dataset_descriptors[i]
-            distance[key] = distance_fn(h1, bbdd_descriptors[key])
-            min_val = min(distance.values())
-
-        for key in range(len(bbdd_descriptors2)):
-            h1 = dataset_descriptors2[i]
-            distance[key] = distance[key] + distance_fn2(h1, bbdd_descriptors2[key])
-            min_val = min(distance.values())
-
-        x = sorted(distance, key=distance.get, reverse=False)[:5]
-        result_5k.append(x)
-        y = sorted(distance, key=distance.get, reverse=False)[:10]
-        result_10k.append(y)
-        result = [key for key, value in distance.items() if value == min_val]
-        result_1k.append(result)
-
-    score_k1 = metrics.mapk(dataset, result_1k, 1) * 100
-    score_k5 = metrics.mapk(dataset, result_5k, 5) * 100
-    score_k10 = metrics.mapk(dataset, result_10k, 10) * 100
-    print(result_10k)
-    print(dataset)
-
-    print('Score K1 = ', score_k1, '%')
-    print('Score K5 = ', score_k5, '%')
-    print('Score K10 = ', score_k10, '%')
-
-    # results_dir = "/Users/eudal/PycharmProjects/Master/Team-4/week3"
-
-    pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
-    f = open(pickle_file, 'wb')
-    pickle.dump((result_10k), f, protocol=4)
-    f.close
-
-
-def generate_results_multiple_images_two_descriptors(dataset, bbdd_descriptors, dataset_descriptors, distance_fn,
-                                                     bbdd_descriptors2, dataset_descriptors2, distance_fn2):
-    result_1k = []
-    result_5k = []
-    result_10k = []
-    results_10k2d = []
-    min_val = 0
-    distance = {}
-    datasetGen = []
-    for i in range(len(dataset)):
-        for j in range(len(dataset[i])):
-            datasetGen.append([dataset[i][j]])
-    print(len(datasetGen))
-    for i in range(len(dataset_descriptors)):
-        y2 = []
-        for j in range(len(dataset_descriptors[i])):
-            h1 = dataset_descriptors[i][j]
-            for key in range(len(bbdd_descriptors)):
-                distance[key] = distance_fn(h1, bbdd_descriptors[key])
-            h2 = dataset_descriptors2[i]
-            for key in range(len(bbdd_descriptors2)):
-                distance[key] = distance[key] + distance_fn2(h2, bbdd_descriptors2[key])
-
-            y = sorted(distance, key=distance.get, reverse=False)[:10]
-            x = sorted(distance, key=distance.get, reverse=False)[:5]
-            z = sorted(distance, key=distance.get, reverse=False)[:1]
-            y2.append(y)
-
-            result_10k.append(y)
-            result_5k.append(x)
-            result_1k.append(z)
-        results_10k2d.append(y2)
-
-    score_k1 = metrics.mapk(datasetGen, result_1k, 1) * 100
-    score_k5 = metrics.mapk(datasetGen, result_5k, 5) * 100
-    score_k10 = metrics.mapk(datasetGen, result_10k, 10) * 100
-    print(result_10k)
-    print(datasetGen)
-
-    print('Score K1 = ', score_k1, '%')
-    print('Score K5 = ', score_k5, '%')
-    print('Score K10 = ', score_k10, '%')
-
-    # results_dir = "/Users/eudal/PycharmProjects/Master/Team-4/week3"
-
-    pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
-    f = open(pickle_file, 'wb')
-    pickle.dump((results_10k2d), f, protocol=4)
-    f.close
 
 
 def histogram_noise_qsd2(dataset, descriptor):
@@ -336,7 +242,7 @@ if __name__ == "__main__":
     '''
 
     descriptor = ImageDescriptors.HOG
-    distanceFn = Distance.x2distance
+    distanceFn = Distance.euclidean
     method = 1
 
     # Call to the test
@@ -352,7 +258,7 @@ if __name__ == "__main__":
     # print(bbdd_descriptors1)
     # Generate results
     print('Generating results')
-    generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distanceFn, minMaxValue=17000)
+    generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distanceFn, minMaxValue=9999999)
 
     # pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
     # f = open(pickle_file, 'wb')
