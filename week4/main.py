@@ -42,7 +42,7 @@ def get_dataset(folder):
     return dataset
 
 
-def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distance_fn, minValue = 4):
+def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distance_fn, minMaxValue = 4, reverse=True):
     result_1k = []
     result_5k = []
     result_10k = []
@@ -62,13 +62,17 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
             distance = {}
             for key in range(len(bbdd_descriptors)):
                 distanceValue = distance_fn(h1, bbdd_descriptors[key])
-                if distanceValue > minValue:
-                    distance[key] = distanceValue
+                if reverse:
+                    if distanceValue < minValue:
+                        distance[key] = distanceValue
+                else:
+                    if distanceValue > minValue:
+                        distance[key] = distanceValue
 
             if len(distance) > 0:
-                y = sorted(distance, key=distance.get, reverse=True)[:10]
-                x = sorted(distance, key=distance.get, reverse=True)[:5]
-                z = sorted(distance, key=distance.get, reverse=True)[:1]
+                y = sorted(distance, key=distance.get, reverse=reverse)[:10]
+                x = sorted(distance, key=distance.get, reverse=reverse)[:5]
+                z = sorted(distance, key=distance.get, reverse=reverse)[:1]
                 y2.append(y)
                 result_10k.append(y)
                 result_5k.append(x)
@@ -331,8 +335,8 @@ if __name__ == "__main__":
     HISTOGRAM_TEXT_TEXTURE QSD2 --> method = 10
     '''
 
-    descriptor = ImageDescriptors.SIFT
-    distanceFn = Distance.matches
+    descriptor = ImageDescriptors.HOG
+    distanceFn = Distance.x2distance
     method = 1
 
     # Call to the test
@@ -348,7 +352,7 @@ if __name__ == "__main__":
     # print(bbdd_descriptors1)
     # Generate results
     print('Generating results')
-    generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distanceFn)
+    generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distanceFn, minMaxValue=17000)
 
     # pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
     # f = open(pickle_file, 'wb')
