@@ -16,13 +16,16 @@ class Distance(object):
     def matches(des1, des2):  # x^2 distance
 
         count = 0
-        bf = cv2.BFMatcher()
-        matches = bf.knnMatch(des1, des2, k=2)
-        good = []
-        for m, n in matches:
-            if m.distance < 0.5 * n.distance:
-                good.append([m])
-                count += 1
+        try:
+            bf = cv2.BFMatcher()
+            matches = bf.knnMatch(des1, des2, k=2)
+            good = []
+            for m, n in matches:
+                if m.distance < 0.5 * n.distance:
+                    good.append([m])
+                    count += 1
+        except:
+            pass
 
         return count
 
