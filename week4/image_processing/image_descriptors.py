@@ -1,3 +1,4 @@
+import imutils
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv2
@@ -35,7 +36,9 @@ class ImageDescriptors(object):
     HISTOGRAM_TEXT = 7
     TEXTURE_WAVELET_TEXT = 8
     HISTOGRAM_TEXT_TEXTURE = 9
-    
+
+    # Keypoints descriptors
+    SIFT = 10
 
     @staticmethod
     def generate_descriptor(image,  method=1, cellSize=(10, 10)):
@@ -64,7 +67,10 @@ class ImageDescriptors(object):
             return ImageDescriptors.texture_text(image, cellSize) 
         
         elif method == ImageDescriptors.HISTOGRAM_TEXT_TEXTURE:
-            return ImageDescriptors.texture_text_hist(image, cellSize)   
+            return ImageDescriptors.texture_text_hist(image, cellSize)
+
+        elif method == ImageDescriptors.SIFT:
+            return ImageDescriptors.sift(image)
     @staticmethod
     def histogramCell(image, cellSize=(10, 10)):
 
@@ -174,4 +180,24 @@ class ImageDescriptors(object):
     @staticmethod
     def texture_text_hist(image, cellSize):
         return ImageDescriptors.histo_wavelet_transform(image, cellSize)
+
+    @staticmethod
+    def sift(image):
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        resize = imutils.resize(gray, width=1000)
+        resize = ImageNoise.remove_noise_median(resize, 5)
+
+        sift = cv2.SIFT_create(nfeatures=300)
+        #kp = sift.detect(gray, None)
+        #img = cv2.drawKeypoints(gray, kp, image)
+
+        #plt.imshow(img)
+        #plt.show()
+
+        kp, des = sift.detectAndCompute(resize, None)
+
+        return des
+
+
+
 

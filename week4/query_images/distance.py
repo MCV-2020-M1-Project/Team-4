@@ -1,5 +1,5 @@
 import numpy as np
-
+import cv2
 
 class Distance(object):
 
@@ -11,6 +11,16 @@ class Distance(object):
     def x2distance(h1, h2):  # x^2 distance
         h1 = h1 + 0.0000000001
         return np.sum(np.divide(np.power((h1 - h2), 2), (h1 + h2)))
+
+    @staticmethod
+    def matches(des1, des2):  # x^2 distance
+        bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
+        if des1 is not None and des2 is not None:
+            matches = bf.match(des1, des2)
+            matches = sorted(matches, key=lambda x: x.distance)
+            return len(matches)
+
+        return 0
 
     @staticmethod
     def levenshtein(str1, str2):  # x^2 distance

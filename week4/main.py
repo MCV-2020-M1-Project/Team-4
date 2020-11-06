@@ -106,9 +106,9 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
             for key in range(len(bbdd_descriptors)):
                 distance[key] = distance_fn(h1, bbdd_descriptors[key])
 
-            y = sorted(distance, key=distance.get, reverse=False)[:10]
-            x = sorted(distance, key=distance.get, reverse=False)[:5]
-            z = sorted(distance, key=distance.get, reverse=False)[:1]
+            y = sorted(distance, key=distance.get, reverse=True)[:10]
+            x = sorted(distance, key=distance.get, reverse=True)[:5]
+            z = sorted(distance, key=distance.get, reverse=True)[:1]
             y2.append(y)
             result_10k.append(y)
             result_5k.append(x)
@@ -128,10 +128,10 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
 
     # results_dir = "/Users/eudal/PycharmProjects/Master/Team-4/week3"
 
-    pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
+    """pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
     f = open(pickle_file, 'wb')
     pickle.dump((results_10k2d), f, protocol=4)
-    f.close
+    f.close"""
 
 
 def generate_results_two_descriptors(dataset, bbdd_descriptors, dataset_descriptors, distance_fn, bbdd_descriptors2,
@@ -229,175 +229,6 @@ def generate_results_multiple_images_two_descriptors(dataset, bbdd_descriptors, 
     f.close
 
 
-def evaluate_noise():
-    pass
-
-
-def simple_descriptor(dataset, descriptor):
-    dataset_descriptors = []
-    for i in range(len(dataset)):
-        img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
-        # imgWithoutNoise = cv2.imread(DATASET_FOLDER + '/non_augmented/{:05d}.jpg'.format(i))
-
-        # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
-        # print(cv2.PSNR(imgWithoutNoise, img))
-        # print(Distance.euclidean(imgWithoutNoise, img))
-        # evaluate_noise()#//TODO: Implement evaluation of noise
-
-        coordinates, mask = TextDetection.text_detection(img)
-        img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
-
-        # Generate descriptors
-        dataset_descriptors.append(ImageDescriptors.generate_descriptor(img, descriptor))
-
-    # Generate results
-    return dataset_descriptors
-
-
-def text_noise(dataset, descriptor):
-    dataset_descriptors = []
-    for i in range(len(dataset)):
-        img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
-
-        # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
-        coordinates, mask = TextDetection.text_detection(img)
-        cropped = img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)]
-        try:
-            cv2.imwrite('textos{}.png'.format(i), cropped)
-        except:
-            pass
-        # Generate descriptors
-        dataset_descriptors.append(ImageDescriptors.generate_descriptor(cropped, descriptor))
-
-    # Generate results
-    return dataset_descriptors
-
-
-def two_descriptors(dataset, descriptor):
-    dataset_descriptors1 = []
-    dataset_descriptors2 = []
-    for i in range(len(dataset)):
-        img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
-        # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
-        coordinates, mask = TextDetection.text_detection(img)
-        cropped = img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)]
-        # Generate descriptors
-        dataset_descriptors2.append(ImageDescriptors.generate_descriptor(cropped, method=2))
-
-    for i in range(len(dataset)):
-        img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
-        # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
-        # Generate descriptors
-        a = ImageDescriptors.generate_descriptor(img, descriptor)
-        dataset_descriptors1.append(a)
-
-    # Generate results
-    return dataset_descriptors1, dataset_descriptors2
-
-
-def two_descriptors_qsd2(dataset, descriptor):
-    dataset_descriptors1 = []
-    dataset_descriptors2 = []
-    for i in range(len(dataset)):
-        img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
-        # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
-        images = ImageBackgroundRemoval.canny(img)
-
-        for image in images:
-            descriptorsxImage = []
-            coordinates, mask = TextDetection.text_detection(image)
-            cropped = image[int(coordinates[1] - 5):int(coordinates[3] + 5),
-                      int(coordinates[0] - 5):int(coordinates[2] + 5)]
-            descriptorsxImage.append(ImageDescriptors.generate_descriptor(cropped, method=2))
-
-            dataset_descriptors2.append(descriptorsxImage)
-
-    for i in range(len(dataset)):
-
-        img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
-        # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
-        images = ImageBackgroundRemoval.canny(img)
-        # Generate descriptors
-        descriptorsxImage2 = []
-        for image in images:
-            descriptorsxImage2.append(ImageDescriptors.generate_descriptor(image, descriptor))
-
-        # Generate descriptors
-        dataset_descriptors1.append(descriptorsxImage2)
-
-    # Generate results
-    return dataset_descriptors1, dataset_descriptors2
-
-
-'''
-def text_noise_qsd2(dataset, descriptor):
-
-    dataset_descriptors = []
-    for i in range(len(dataset)):
-        img = cv2.imread(DATASET_FOLDER+'/{:05d}.jpg'.format(i))
-
-        # Preprocess pipeline
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
-        images = ImageBackgroundRemoval.canny(img)
-        
-        # Generate descriptors
-        descriptorsxImage = []
-        for image in images:
-            coordinates, mask = TextDetection.text_detection(img)
-            cropped = img[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)]
-            descriptorsxImage.append(ImageDescriptors.generate_descriptor(cropped, descriptor))
-    # Generate results
-    return descriptorsxImage
-'''
-
-
-def descriptor_noise_qsd2(dataset, descriptor):
-    dataset_descriptors = []
-    qt = 0
-    for i in range(len(dataset)):
-        img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
-
-        """plt.imshow(img)
-        plt.show()"""
-
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN, 5)
-        images = ImageBackgroundRemoval.canny(img)
-        qt += len(images)
-
-        # Generate descriptors
-        descriptorsxImage = []
-        for image in images:
-            image = imutils.resize(image, width=img.shape[0] // 4)
-            coordinates, mask = TextDetection.text_detection(image)
-            image[int(coordinates[1] - 5):int(coordinates[3] + 5),
-            int(coordinates[0] - 5):int(coordinates[2] + 5)] = 255
-            # plt.imshow(image);plt.show();
-            descriptorsxImage.append(ImageDescriptors.generate_descriptor(image, descriptor))
-
-        dataset_descriptors.append(descriptorsxImage)
-
-    print(qt)
-
-    # Generate results
-    return dataset_descriptors
-
-
-def texture_descriptors(dataset, descriptor):
-    dataset_descriptors = []
-    for i in range(len(dataset)):
-        img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i), 0)
-        # Generate descriptors    
-        dataset_descriptors.append(ImageDescriptors.generate_descriptor(img, descriptor))
-        # Generate results
-    return dataset_descriptors
-
-
 def histogram_noise_qsd2(dataset, descriptor):
     dataset_descriptors = []
     c = 0
@@ -407,7 +238,7 @@ def histogram_noise_qsd2(dataset, descriptor):
         img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
         images = ImageBackgroundRemoval.canny(img)
 
-        print(str(i)+" "+str(len(images)))
+        #print(str(i)+" "+str(len(images)))
         c += len(images)
 
         # Generate descriptors
@@ -425,49 +256,12 @@ def histogram_noise_qsd2(dataset, descriptor):
     return dataset_descriptors
 
 
-def texture_noise_qsd2(dataset, descriptor):
-    dataset_descriptors = []
-    for i in range(len(dataset)):
-        img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
-
-        img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
-        images = ImageBackgroundRemoval.canny(img)
-
-        # Generate descriptors
-        descriptorsxImage = []
-        for image in images:
-            coordinates, mask = TextDetection.text_detection(image)
-            image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
-            descriptorsxImage.append(ImageDescriptors.generate_descriptor(image, descriptor))
-
-        dataset_descriptors.append(descriptorsxImage)
-
-    # Generate results
-    return dataset_descriptors
-
-
 def generate_descriptors(dataset, method=1, descriptor=1):
     # Choose method to preprocess and pass descriptor id
     if method == 1:
-        dataset_descriptors = simple_descriptor(dataset, descriptor)
-    elif method == 2:
-        dataset_descriptors = text_noise(dataset, descriptor)
-    elif method == 3:
-        dataset_descriptors = texture_descriptors(dataset, descriptor)
-    elif method == 4:
         dataset_descriptors = histogram_noise_qsd2(dataset, descriptor)
-    elif method == 5:
-        dataset_descriptors = texture_noise_qsd2(dataset, descriptor)
-    elif method > 5:
-        if method > 8:
-            dataset_descriptors1, dataset_descriptors2 = two_descriptors_qsd2(dataset, descriptor)
-        else:
-            dataset_descriptors1, dataset_descriptors2 = two_descriptors(dataset, descriptor)
 
-    if method > 5:
-        return dataset_descriptors1, dataset_descriptors2
-    else:
-        return dataset_descriptors
+    return dataset_descriptors
 
 
 def generate_db_descriptors(bbdd, descriptor=1):
@@ -572,43 +366,24 @@ if __name__ == "__main__":
     HISTOGRAM_TEXT_TEXTURE QSD2 --> method = 10
     '''
 
-    descriptor = ImageDescriptors.HISTOGRAM_TEXTURE_WAVELET
-    distanceFn = Distance.x2distance
-    method = 4
-    distanceFn2 = Distance.levenshtein
+    descriptor = ImageDescriptors.SIFT
+    distanceFn = Distance.matches
+    method = 1
 
     # Call to the test
     print('Generating dataset descriptors')
-    if method > 5:
-        dataset_descriptors1, dataset_descriptors2 = generate_descriptors(dataset, method, descriptor)
-    else:
-        dataset_descriptors = generate_descriptors(dataset, method, descriptor)
+    dataset_descriptors = generate_descriptors(dataset, method, descriptor)
+
     # print(dataset_descriptors)
     # print(dataset_descriptors1)
     print('Generating ddbb descriptors')
-    if method > 5:
-        bbdd_descriptors1, bbdd_descriptors2 = generate_db_descriptors(bbdd, descriptor)
-    else:
-        bbdd_descriptors = generate_db_descriptors(bbdd, descriptor)
+    bbdd_descriptors = generate_db_descriptors(bbdd, descriptor)
 
     # print(bbdd_descriptors)
     # print(bbdd_descriptors1)
     # Generate results
     print('Generating results')
-    if query_set == 1:
-        if method > 5:
-            generate_results_two_descriptors(dataset, bbdd_descriptors1, dataset_descriptors1, distanceFn,
-                                             bbdd_descriptors2, dataset_descriptors2, distanceFn2)
-        else:
-            generate_results(dataset, bbdd_descriptors, dataset_descriptors, distanceFn)
-
-    elif query_set == 2:
-        if method > 5:
-            generate_results_multiple_images_two_descriptors(dataset, bbdd_descriptors1, dataset_descriptors1,
-                                                             distanceFn, bbdd_descriptors2, dataset_descriptors2,
-                                                             distanceFn2)
-        else:
-            generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distanceFn)
+    generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distanceFn)
 
     # pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
     # f = open(pickle_file, 'wb')
