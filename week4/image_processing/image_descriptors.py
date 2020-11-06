@@ -183,20 +183,22 @@ class ImageDescriptors(object):
 
     @staticmethod
     def sift(image):
+
+        sift = cv2.SIFT_create(nfeatures=2000)
+
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        resize = imutils.resize(gray, width=1000)
-        resize = ImageNoise.remove_noise_median(resize, 5)
 
-        sift = cv2.SIFT_create(nfeatures=300)
-        #kp = sift.detect(gray, None)
-        #img = cv2.drawKeypoints(gray, kp, image)
+        scale_percent = 50  # percent of original size
+        width = int(gray.shape[1] * scale_percent / 100)
+        height = int(gray.shape[0] * scale_percent / 100)
+        dim = (width, height)
+        # resize image
+        if gray.shape[0] > 500 or gray.shape[1] > 500:
+            gray = cv2.resize(gray, dim, interpolation=cv2.INTER_AREA)
 
-        #plt.imshow(img)
-        #plt.show()
+        keypoints_1, descriptors_1 = sift.detectAndCompute(gray, None)
 
-        kp, des = sift.detectAndCompute(resize, None)
-
-        return des
+        return descriptors_1
 
 
 

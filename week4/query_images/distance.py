@@ -14,13 +14,17 @@ class Distance(object):
 
     @staticmethod
     def matches(des1, des2):  # x^2 distance
-        bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
-        if des1 is not None and des2 is not None:
-            matches = bf.match(des1, des2)
-            matches = sorted(matches, key=lambda x: x.distance)
-            return len(matches)
 
-        return 0
+        count = 0
+        bf = cv2.BFMatcher()
+        matches = bf.knnMatch(des1, des2, k=2)
+        good = []
+        for m, n in matches:
+            if m.distance < 0.5 * n.distance:
+                good.append([m])
+                count += 1
+
+        return count
 
     @staticmethod
     def levenshtein(str1, str2):  # x^2 distance
