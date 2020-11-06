@@ -40,9 +40,9 @@ class ImageBackgroundRemoval(object):
 
         imgCrop = ImageBackgroundRemoval.crop_with_mask(image, mask)
 
-        for img in imgCrop:
+        """for img in imgCrop:
             plt.imshow(img)
-            plt.show()
+            plt.show()"""
 
         return imgCrop
 
