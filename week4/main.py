@@ -62,7 +62,7 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
             distance = {}
             for key in range(len(bbdd_descriptors)):
                 distanceValue = distance_fn(h1, bbdd_descriptors[key])
-                print(distanceValue)
+                #print(distanceValue)
                 if reverse:
                     if distanceValue < minMaxValue:
                         distance[key] = distanceValue
@@ -71,9 +71,9 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
                         distance[key] = distanceValue
 
             if len(distance) > 0:
-                y = sorted(distance, key=distance.get, reverse=reverse)[:10]
-                x = sorted(distance, key=distance.get, reverse=reverse)[:5]
-                z = sorted(distance, key=distance.get, reverse=reverse)[:1]
+                y = sorted(distance, key=distance.get, reverse=False)[:10]
+                x = sorted(distance, key=distance.get, reverse=False)[:5]
+                z = sorted(distance, key=distance.get, reverse=False)[:1]
                 y2.append(y)
                 result_10k.append(y)
                 result_5k.append(x)
@@ -112,15 +112,14 @@ def histogram_noise_qsd2(dataset, descriptor):
 
         img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
         images = ImageBackgroundRemoval.canny(img)
-
         #print(str(i)+" "+str(len(images)))
         c += len(images)
 
         # Generate descriptors
         descriptorsxImage = []
         for image in images:
-            coordinates, mask = TextDetection.text_detection(image)
-            image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
+            #coordinates, mask = TextDetection.text_detection(image)
+            #image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
             descriptorsxImage.append(ImageDescriptors.generate_descriptor(image, descriptor))
 
         dataset_descriptors.append(descriptorsxImage)
@@ -242,7 +241,7 @@ if __name__ == "__main__":
     '''
 
     descriptor = ImageDescriptors.HOG
-    distanceFn = Distance.euclidean
+    distanceFn = Distance.x2distance
     method = 1
 
     # Call to the test
