@@ -287,7 +287,7 @@ class ImageDescriptors(object):
         fd= fd*255
         #print(fd)
         #print(len(fd))
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4), sharex=True, sharey=True)
+        '''fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4), sharex=True, sharey=True)
 
         ax1.axis('off')
         ax1.imshow(img, cmap=plt.cm.gray)
@@ -299,5 +299,5 @@ class ImageDescriptors(object):
         ax2.axis('off')
         ax2.imshow(hog_image_rescaled, cmap=plt.cm.gray)
         ax2.set_title('Histogram of Oriented Gradients')
-        plt.show()
+        plt.show()'''
         return fd
