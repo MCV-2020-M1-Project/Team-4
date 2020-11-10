@@ -5,23 +5,15 @@ import cv2 as cv2
 import os
 import skimage
 import pytesseract
-from skimage import feature
+from skimage import feature, data, exposure
 from skimage.feature import local_binary_pattern as lbp
+from skimage.feature import hog
 from scipy.fftpack import fft, dct
 import pywt
 from image_processing.image_utils import ImageUtils
 from skimage.feature import hog
 
-import matplotlib.pyplot as plt
-import numpy as np
-import cv2 as cv2
-import os
-import skimage
-import pytesseract
-from skimage.feature import local_binary_pattern as lbp
-from scipy.fftpack import fft, dct
-import pywt
-from image_processing.image_utils import ImageUtils
+
 from image_processing.image_noise import ImageNoise
 from image_processing.text_detection import TextDetection
 
@@ -75,7 +67,7 @@ class ImageDescriptors(object):
             return ImageDescriptors.sift(image)
 
         elif method == ImageDescriptors.HOG:
-            return ImageDescriptors.hog(image)
+            return ImageDescriptors.hog3(image)
 
         elif method == ImageDescriptors.LBP:
             return ImageDescriptors.lbp(image)
@@ -192,9 +184,16 @@ class ImageDescriptors(object):
     @staticmethod
     def sift(image):
 
-        sift = cv2.SIFT_create(nfeatures=3000)
+        sift = cv2.SIFT_create(nfeatures=50)
+
+
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        '''r, c = gray.shape
+        s_aux = cv2.pyrDown(gray, dstsize=(c // 2, r // 2))
+        s_aux = cv2.pyrUp(s_aux, dstsize=(c, r))
+        gray = cv2.subtract(gray, s_aux)'''
 
         scale_percent = 50  # percent of original size
         width = int(gray.shape[1] * scale_percent / 100)
@@ -203,6 +202,13 @@ class ImageDescriptors(object):
         # resize image
         if gray.shape[0] > 500 or gray.shape[1] > 500:
             gray = cv2.resize(gray, dim, interpolation=cv2.INTER_AREA)
+
+        kp = sift.detect(gray, None)
+        #print(kp)
+        #print(len(kp))
+        '''img = cv2.drawKeypoints(gray, kp, image, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        cv2.imshow('sift_keypoints.jpg', img)
+        cv2.waitKey(0)'''
 
         keypoints_1, descriptors_1 = sift.detectAndCompute(gray, None)
 
@@ -237,3 +243,61 @@ class ImageDescriptors(object):
         hist /= (hist.sum() + eps)
         # return the histogram of Local Binary Patterns
         return hist
+
+    @staticmethod
+    def hog2(img):
+        cv2.waitKey(0)
+        img = cv2.resize(img,(240,240))
+        '''cv2.imshow("resized imag", img)
+        cv2.waitKey(0)'''
+        winSize = (240, 240)
+        blockSize = (40, 40)
+        blockStride = (5, 5)
+        cellSize = (40, 40)
+        nbins = 9
+        derivAperture = 1
+        winSigma = -1.
+        histogramNormType = 0
+        L2HysThreshold = 0.2
+        gammaCorrection = 1
+        nlevels = 64
+        signedGradients = True
+
+        hog = cv2.HOGDescriptor(winSize,blockSize,blockStride,cellSize,nbins,derivAperture,winSigma,histogramNormType,L2HysThreshold,gammaCorrection,nlevels, signedGradients)
+        h = hog.compute(img)*255
+
+        gx = cv2.Sobel(img, cv2.CV_32F, 1, 0, ksize=1)
+        gy = cv2.Sobel(img, cv2.CV_32F, 0, 1, ksize=1)
+        # Python Calculate gradient magnitude and direction ( in degrees )
+        mag, angle = cv2.cartToPolar(gx, gy, angleInDegrees=True)
+        '''print(h)
+        print(len(h))
+        print()
+        print(h[500])
+        cv2.imshow("imag", img)
+        cv2.waitKey(0)'''
+        return h
+
+    @staticmethod
+    def hog3(img):
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img = cv2.resize(gray, (120, 120))
+        fd, hog_image = hog(img, orientations=9, pixels_per_cell=(10, 10),
+                            cells_per_block=(2, 2), visualize=True, multichannel=False)
+        fd= fd*255
+        #print(fd)
+        #print(len(fd))
+        '''fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4), sharex=True, sharey=True)
+
+        ax1.axis('off')
+        ax1.imshow(img, cmap=plt.cm.gray)
+        ax1.set_title('Input image')
+
+        # Rescale histogram for better display
+        hog_image_rescaled = exposure.rescale_intensity(hog_image, in_range=(0, 10))
+
+        ax2.axis('off')
+        ax2.imshow(hog_image_rescaled, cmap=plt.cm.gray)
+        ax2.set_title('Histogram of Oriented Gradients')
+        plt.show()'''
+        return fd
