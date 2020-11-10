@@ -24,7 +24,7 @@ class ImageBackgroundRemoval(object):
         # gaussiana = cv2.GaussianBlur(resize, (1, 1), 1.25)
         edges = cv2.Canny(resize, 0, 125)
         edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7)),
-                                 iterations=3)
+                                 iterations=2)
 
         # Contours detector
         (contours, hierarchy) = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)

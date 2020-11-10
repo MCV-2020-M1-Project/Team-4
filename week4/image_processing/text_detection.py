@@ -1,8 +1,209 @@
 import cv2
+import imutils
 import numpy as np
 import matplotlib.pyplot as plt
+from pytesseract import pytesseract, Output
+
+from image_processing import ImageNoise
+from query_images import Distance
+
 
 class TextDetection(object):
+
+    @staticmethod
+    def opening(m, size=(45, 45)):
+        kernel = np.ones(size, np.uint8)
+        m = cv2.erode(m, kernel, iterations=1)
+        m = cv2.dilate(m, kernel, iterations=1)
+        return m
+
+    @staticmethod
+    def closing(m, size=(45, 45)):
+        kernel = np.ones(size, np.uint8)
+        m = cv2.dilate(m, kernel, iterations=1)
+        m = cv2.erode(m, kernel, iterations=1)
+        return m
+
+    @staticmethod
+    def brightText(img):
+        """
+        Generates the textboxes candidated based on TOPHAT morphological filter.
+        Works well with bright text over dark background.
+
+        Parameters
+        ----------
+        img : ndimage to process
+
+        Returns
+        -------
+        mask: uint8 mask with regions of interest (possible textbox candidates)
+        """
+        kernel = np.ones((30, 30), np.uint8)
+        img_orig = cv2.morphologyEx(img, cv2.MORPH_TOPHAT, kernel)
+
+        TH = 150
+        img_orig[(img_orig[:, :, 0] < TH) | (img_orig[:, :, 1] < TH) | (img_orig[:, :, 2] < TH)] = (0, 0, 0)
+
+        img_orig = TextDetection.closing(img_orig, size=(1, int(img.shape[1] / 8)))
+
+        return (cv2.cvtColor(img_orig, cv2.COLOR_BGR2GRAY) != 0).astype(np.uint8)
+
+    @staticmethod
+    def darkText(img):
+        """
+        Generates the textboxes candidated based on BLACKHAT morphological filter.
+        Works well with dark text over bright background.
+
+        Parameters
+        ----------
+        img : ndimage to process
+
+        Returns
+        -------
+        mask: uint8 mask with regions of interest (possible textbox candidates)
+        """
+        kernel = np.ones((30, 30), np.uint8)
+        img_orig = cv2.morphologyEx(img, cv2.MORPH_BLACKHAT, kernel)
+
+        TH = 150
+        img_orig[(img_orig[:, :, 0] < TH) | (img_orig[:, :, 1] < TH) | (img_orig[:, :, 2] < TH)] = (0, 0, 0)
+
+        img_orig = TextDetection.closing(img_orig, size=(1, int(img.shape[1] / 8)))
+
+        return (cv2.cvtColor(img_orig, cv2.COLOR_BGR2GRAY) != 0).astype(np.uint8)
+
+    def extract_biggest_connected_component(mask: np.ndarray) -> np.ndarray:
+        """
+        Extracts the biggest connected component from a mask (0 and 1's).
+        Args:
+            img: 2D array of type np.float32 representing the mask
+
+        Returns : 2D array, mask with 1 in the biggest component and 0 outside
+        """
+        # extract all connected components
+        num_labels, labels_im = cv2.connectedComponents(mask.astype(np.uint8))
+
+        # we find and return only the biggest one
+        max_val, max_idx = 0, -1
+        for i in range(1, num_labels):
+            area = np.sum(labels_im == i)
+            if area > max_val:
+                max_val = area
+                max_idx = i
+
+        return (labels_im == max_idx).astype(float)
+
+    def get_textbox_score(m, p_shape):
+        """
+        Generates a score for how textbox-ish a mask connected component is.
+
+        Parameters
+        ----------
+        m : mask with the textbox region with 1's
+        p_shape : shape of the minimum bounding box enclosing the painting.
+
+        Returns
+        -------
+        score: score based on size + shape
+        """
+        m = m.copy()
+
+        # we generate the minimum bounding box for the extracted mask
+        x, y, w, h = cv2.boundingRect(m.astype(np.uint8))
+
+        # some upper and lower thresholding depending on its size and the painting size.
+        if w < 10 or h < 10 or h > w:
+            return 0
+        if w >= p_shape[0] * 0.8 or h >= p_shape[1] / 4:
+            return 0
+
+        # we compute the score according to its shape and its size
+        sc_shape = np.sum(m[y:y + h, x:x + w]) / (w * h)
+        sc_size = (w * h) / (m.shape[0] * m.shape[1])
+
+        final_score = (sc_shape + 50 * sc_size) / 2
+
+        return final_score
+
+    @staticmethod
+    def text_detection3(image):
+
+        dark = TextDetection.darkText(image);
+        bright = TextDetection.brightText(image)
+
+        darkC = TextDetection.extract_biggest_connected_component(dark)
+        bC = TextDetection.extract_biggest_connected_component(bright)
+
+        scoreDark = TextDetection.get_textbox_score(darkC, dark.shape)
+        scoreLight = TextDetection.get_textbox_score(bC, dark.shape)
+        best = None
+
+        if scoreDark < scoreLight:
+            best = darkC
+        else:
+            best = bC
+
+        mask = np.zeros(best.shape)
+        contours, _ = cv2.findContours(best.astype(np.uint8), 1, 1)  # not copying here will throw an error
+        rect = cv2.minAreaRect(contours[0])  # basically you can feed this rect into your classifier
+        (x, y), (w, h), a = rect  # a - angle
+
+        box = cv2.boxPoints(rect)
+        box = np.int0(box)  # turn into ints
+        rect2 = cv2.drawContours(mask, [box], 0, 255, 10)
+        rect2 = cv2.drawContours(mask, [box], 0, 255, -1)
+
+        plt.imshow(rect2, 'gray')
+        plt.show()
+
+        return rect2
+
+    @staticmethod
+    def text_detection2(image):
+
+        blurred = cv2.GaussianBlur(image, (3, 3), 1)
+
+        resize = imutils.resize(blurred, width=image.shape[1]//2)
+
+        gray = cv2.cvtColor(resize, cv2.COLOR_BGR2GRAY)
+
+        tophat = cv2.morphologyEx(gray, cv2.MORPH_TOPHAT, np.ones((1,10)), iterations=1)
+        blackhat = cv2.morphologyEx(tophat, cv2.MORPH_BLACKHAT, np.ones((5,5)), iterations=10)
+
+        thres = cv2.threshold(blackhat, 100, 255, cv2.THRESH_BINARY)[1]
+
+        open = cv2.morphologyEx(thres, cv2.MORPH_OPEN, np.ones((3,3)), iterations=1)
+        dilate = cv2.morphologyEx(open, cv2.MORPH_DILATE, np.ones((10,100)), iterations=1)
+
+        areaImg = image.shape[0] * image.shape[1]
+        ratio = image.shape[1] / resize.shape[1]
+        retval, labels, stats, centroids = cv2.connectedComponentsWithStats(dilate)
+
+        bestArea = 0
+        bestStats = None
+        for label in range(retval):
+            actualStats = TextDetection.normalize_countour(stats[label], ratio)
+            x, y, w, h, area = actualStats
+            if areaImg * 0.001 < area < areaImg * 0.3 and w > h * 2 and bestArea < area:
+                bestArea = area
+                bestStats = actualStats
+
+        if bestStats is not None:
+            x, y, w, h, area = bestStats
+            cv2.rectangle(image, (x,y), (x+w, y+h), (255, 0, 0), 10)
+            plt.imshow(image, 'gray')
+            plt.show()
+        else:
+            return np.zeros([4])
+
+        return np.zeros([4])
+
+    @staticmethod
+    def normalize_countour(contour, ratio):
+        contour = contour.astype("float")
+        contour *= ratio
+        contour = contour.astype("int")
+        return contour
 
     @staticmethod
     def text_detection(image):
@@ -17,7 +218,7 @@ class TextDetection(object):
         # TextDetection.find_regions(img)
         # Open morphological transformation using a square kernel with dimensions 10x10
         kernel = np.ones((10, 10), np.uint8)
-        s = cv2.GaussianBlur(s, (5, 5), 0)
+        #s = cv2.GaussianBlur(s, (5, 5), 0)
         # kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (10, 10))
         morph_open = cv2.morphologyEx(s, cv2.MORPH_OPEN, kernel)
         # Convert the image to binary
