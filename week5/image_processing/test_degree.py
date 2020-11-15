@@ -19,17 +19,17 @@ class Rotation(object):
         img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         img = cv2.medianBlur(resize, 5 )
 
-        edge_image = cv2.Canny(img, 40, 150)
+        edge_image = cv2.Canny(img, 10, 250)
         #plt.imshow(edge_image)
         #plt.show()
 
-        th = 500
-        eps = 20
-        minLines = 10
+        th = 300
+        eps = 10
+        minLines = 1
         lines = None
         resH = []
         while (lines is None or len(resH) < minLines) and th > 0:
-            lines = cv2.HoughLines(edge_image, 1, np.pi / 180, th, srn=0, stn=0)
+            lines = cv2.HoughLines(edge_image, 1, np.pi / 180, th, 120, stn=0)
             v, resH = Rotation.get_lines(lines)
             if lines is None or len(resH) < minLines:
                 th -= eps
