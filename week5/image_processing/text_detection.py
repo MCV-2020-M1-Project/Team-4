@@ -3,6 +3,8 @@ import imutils
 import numpy as np
 import matplotlib.pyplot as plt
 from pytesseract import pytesseract, Output
+import re
+import os
 
 from image_processing import ImageNoise
 from query_images import Distance
@@ -134,7 +136,6 @@ class TextDetection(object):
 
     @staticmethod
     def text_detection3(image):
-
         dark = TextDetection.darkText(image);
         bright = TextDetection.brightText(image)
         mix = TextDetection.mixDarkLightText(image)
@@ -170,8 +171,10 @@ class TextDetection(object):
         return rect2
 
     @staticmethod
-    def text_detection2(image):
-
+    def text_detection2(image, name):
+        if not os.path.exists("./text"):
+            os.makedirs("./text")
+        image_original = image.copy()
         blurred = cv2.GaussianBlur(image, (3, 3), 1)
         laplacian = cv2.Laplacian(image,cv2.CV_16S, ksize= 3)
         median = cv2.medianBlur(image,ksize=3)
@@ -209,9 +212,25 @@ class TextDetection(object):
         if bestStats is not None:
             x, y, w, h, area = bestStats
             cv2.rectangle(image, (x,y), (x+w, y+h), (255, 0, 0), -1)
-            plt.imshow(image, 'gray')
-            plt.show()
+            gray = cv2.cvtColor(image_original, cv2.COLOR_BGR2GRAY)
+            bbtext = np.zeros(gray.shape, np.uint8)
+            cv2.rectangle(bbtext, (x, y), (x + w, y + h), 255, -1)
+            #bbtext = cv2.threshold(bbtext, 100, 1, cv2.THRESH_BINARY)
+
+            gray[bbtext != 255] = 255
+            crop_img = gray[y:y+h, x:x+w]
+            author = pytesseract.image_to_string(crop_img, timeout= 2)
+            regex = re.compile('[^a-zA-Z ]')
+            author= regex.sub('', author)
+            f = open("./text/"+str(name)+".txt",'a')
+            f.writelines(author+"\n")
+            f.close()
+            #plt.imshow(crop_img, 'gray')
+            #plt.show()
         else:
+            f = open("./text/" + str(name) + ".txt", 'a')
+            f.writelines("\n")
+            f.close()
             return image
 
         return image
