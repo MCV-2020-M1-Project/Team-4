@@ -106,9 +106,9 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
 
 
 def histogram_noise_qsd2(dataset, descriptor):
-    dataset_descriptors = []
+dataset_descriptors = []
     c = 0
-    for i in range(len(dataset)):
+    for i in range(50):
         img = cv2.imread(DATASET_FOLDER + '/{:05d}.jpg'.format(i))
 
         img = ImageNoise.remove_noise(img, ImageNoise.MEDIAN)
@@ -117,18 +117,20 @@ def histogram_noise_qsd2(dataset, descriptor):
         images = ImageBackgroundRemoval.canny(img)
         #print(str(i)+" "+str(len(images)))
         c += len(images)
-
+        # Delete previous iterations authors
+        if os.path.exists("./text"+'/{:05d}.txt'.format(i)):
+            os.remove("./text"+'/{:05d}.txt'.format(i))
         # Generate descriptors
         descriptorsxImage = []
         for image in images:
             #coordinates, mask = TextDetection.text_detection(image)
             #image[int(coordinates[1] - 5):int(coordinates[3] + 5), int(coordinates[0] - 5):int(coordinates[2] + 5)] = 0
-            image = TextDetection.text_detection2(image)
+            image = TextDetection.text_detection2(image, '{:05d}'.format(i))
             #image[mask != 0] = 0
             descriptorsxImage.append(ImageDescriptors.generate_descriptor(image, descriptor))
             rgb = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
-            plt.imshow(rgb)
-            plt.show()
+            #plt.imshow(rgb)
+            #plt.show()
 
         dataset_descriptors.append(descriptorsxImage)
 
