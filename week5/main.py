@@ -114,10 +114,10 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
     min_val = 0
     
     
-    datasetGen = []
-    for i in range(50):
-        for j in range(len(dataset[i])):
-            datasetGen.append([dataset[i][j]])
+    #datasetGen = []
+    #for i in range(50):
+        #for j in range(len(dataset[i])):
+            #datasetGen.append([dataset[i][j]])
 
     for i in range(len(dataset_descriptors)):
 
@@ -144,9 +144,9 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
         # print(y2)
         results_10k2d.append(y2)
 
-    score_k1 = metrics.mapk(datasetGen, result_1k, 1) * 100
-    score_k5 = metrics.mapk(datasetGen, result_5k, 5) * 100
-    score_k10 = metrics.mapk(datasetGen, result_10k, 10) * 100
+    #score_k1 = metrics.mapk(datasetGen, result_1k, 1) * 100
+    #score_k5 = metrics.mapk(datasetGen, result_5k, 5) * 100
+    #score_k10 = metrics.mapk(datasetGen, result_10k, 10) * 100
     print(result_10k)
     print(dataset)
     
