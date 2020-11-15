@@ -103,7 +103,64 @@ def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descript
     f = open(pickle_file, 'wb')
     pickle.dump((results_10k2d), f, protocol=4)
     f.close"""
+    
+    
+#generate results DANI
+def generate_results_multiple_images(dataset, bbdd_descriptors, dataset_descriptors, distance_fn):
+    result_1k = []
+    result_5k = []
+    result_10k = []
+    results_10k2d = []
+    min_val = 0
+    
+    
+    datasetGen = []
+    for i in range(50):
+        for j in range(len(dataset[i])):
+            datasetGen.append([dataset[i][j]])
 
+    for i in range(len(dataset_descriptors)):
+
+        y2 = []
+        # print(dataset_descriptors[i])
+        for j in range(len(dataset_descriptors[i])):
+            h1 = dataset_descriptors[i][j]
+            distance = {}
+            for key in range(len(bbdd_descriptors)):
+                distance[key] = distance_fn(h1, bbdd_descriptors[key])
+                if distance[key] < 18:
+                    del distance[key]
+                    distance[-1] = 0
+                    
+                    
+            print(distance)   
+            y = sorted(distance, key=distance.get, reverse=True)[:10]
+            x = sorted(distance, key=distance.get, reverse=True)[:5]
+            z = sorted(distance, key=distance.get, reverse=True)[:1]
+            y2.append(y)
+            result_10k.append(y)
+            result_5k.append(x)
+            result_1k.append(z)
+        # print(y2)
+        results_10k2d.append(y2)
+
+    score_k1 = metrics.mapk(datasetGen, result_1k, 1) * 100
+    score_k5 = metrics.mapk(datasetGen, result_5k, 5) * 100
+    score_k10 = metrics.mapk(datasetGen, result_10k, 10) * 100
+    print(result_10k)
+    print(dataset)
+    
+
+    print('Score K1 = ', score_k1, '%')
+    print('Score K5 = ', score_k5, '%')
+    print('Score K10 = ', score_k10, '%')
+
+    # results_dir = "/Users/eudal/PycharmProjects/Master/Team-4/week3"
+
+    pickle_file = '{}/query{}/method{}/result.pkl'.format(results_dir, query_set, method)
+    f = open(pickle_file, 'wb')
+    pickle.dump((results_10k2d), f, protocol=4)
+    f.close
 
 def histogram_noise_qsd2(dataset, descriptor):
 dataset_descriptors = []
