@@ -175,42 +175,34 @@ class TextDetection(object):
         blurred = cv2.GaussianBlur(image, (3, 3), 1)
         laplacian = cv2.Laplacian(image,cv2.CV_16S, ksize= 3)
         median = cv2.medianBlur(image,ksize=3)
+        # esto nos puede dar problemas para calcular los vertices
         resize = imutils.resize(median, width=image.shape[1]//2)
 
         gray = cv2.cvtColor(resize, cv2.COLOR_BGR2GRAY)
-        gray = (255-gray)
-        plt.imshow(gray, 'gray')
-        plt.show()
-        gray = cv2.equalizeHist(gray)
-        tophat = cv2.morphologyEx(gray, cv2.MORPH_TOPHAT, np.ones((10,10)), iterations=1)
-        plt.imshow(tophat, 'gray')
-        plt.show()
-        blackhat = cv2.morphologyEx(tophat, cv2.MORPH_BLACKHAT, np.ones((10,10)), iterations=1)
 
-        plt.imshow(blackhat, 'gray')
-        plt.show()
+        imgGeneral = TextDetection.text_detect_general(gray)
+        imgBright = TextDetection.text_detect_bright(gray)
 
-        thres = cv2.threshold(blackhat, 50, 255, cv2.THRESH_BINARY)[1]
-
-        plt.imshow(thres, 'gray')
-        #plt.show()
-
-        open = cv2.morphologyEx(thres, cv2.MORPH_OPEN, np.ones((4,4)), iterations=1)
-        dilate = cv2.morphologyEx(open, cv2.MORPH_DILATE, np.ones((25,50)), iterations=1)
-
-        #plt.imshow(dilate, 'gray')
-        #plt.show()
 
         areaImg = image.shape[0] * image.shape[1]
         ratio = image.shape[1] / resize.shape[1]
-        retval, labels, stats, centroids = cv2.connectedComponentsWithStats(dilate)
+        retval, labels, stats, centroids = cv2.connectedComponentsWithStats(imgGeneral)
 
         bestArea = 0
         bestStats = None
         for label in range(retval):
             actualStats = TextDetection.normalize_countour(stats[label], ratio)
             x, y, w, h, area = actualStats
-            if areaImg * 0.001 < area < areaImg * 0.3 and w > h * 2 and bestArea < area:
+            if areaImg * 0.001 < area < areaImg * 0.3 and w > h * 2 and bestArea < area and image.shape[1] * 0.3 < centroids[label,1] < image.shape[1] * 0.7:
+                bestArea = area
+                bestStats = actualStats
+
+        retval1, labels1, stats1, centroids1 = cv2.connectedComponentsWithStats(imgBright)
+
+        for label in range(retval1):
+            actualStats = TextDetection.normalize_countour(stats1[label], ratio)
+            x, y, w, h, area = actualStats
+            if areaImg * 0.001 < area < areaImg * 0.3 and w > h * 2 and bestArea < area and image.shape[0] * 0.45 < centroids1[label,0] < image.shape[0] * 0.65:
                 bestArea = area
                 bestStats = actualStats
 
@@ -224,7 +216,42 @@ class TextDetection(object):
 
         return image
 
+    @staticmethod
+    def text_detect_bright(img):
+        kernel = np.ones((10, 10), np.uint8)
+        kernel1, kernel2 = img.shape[0] // 20, img.shape[1] // 20
+        img_TH = cv2.morphologyEx(img, cv2.MORPH_TOPHAT, np.ones((kernel1, kernel2), np.uint8), iterations=2)
+        # Give extra margin
 
+        img_TH = img_TH[kernel1:img.shape[0] - kernel1, kernel2:img.shape[1] - kernel2]
+
+        # Threshold adaptative 90%
+
+        TH = int(np.max(img_TH) * 0.70)
+
+        img_TH[(img_TH[:, :] < TH)] = 0
+
+        kernel1, kernel2 = int(img.shape[0] // 15), int(img.shape[1] // 2)
+        if kernel1 % 2 == 0:
+            kernel1 += 1
+        if kernel2 % 2 == 0:
+            kernel2 += 1
+        img_Thresh = cv2.morphologyEx(img_TH, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
+        img_Thresh = cv2.morphologyEx(img_Thresh, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+        img_TH = cv2.morphologyEx(img_Thresh, cv2.MORPH_TOPHAT, np.ones((kernel1, kernel2), np.uint8), iterations=2)
+        img_Thresh = cv2.morphologyEx(img_Thresh, cv2.MORPH_CLOSE, np.ones((kernel1, kernel2), np.uint8), borderValue=0)
+        return img_Thresh
+
+    @staticmethod
+    def text_detect_general(img):
+        tophat = cv2.morphologyEx(img, cv2.MORPH_TOPHAT, np.ones((1, 10)), iterations=1)
+        blackhat = cv2.morphologyEx(tophat, cv2.MORPH_BLACKHAT, np.ones((5, 5)), iterations=10)
+
+        thres = cv2.threshold(blackhat, 100, 255, cv2.THRESH_BINARY)[1]
+
+        open = cv2.morphologyEx(thres, cv2.MORPH_OPEN, np.ones((3, 3)), iterations=1)
+        dilate = cv2.morphologyEx(open, cv2.MORPH_DILATE, np.ones((10, 100)), iterations=1)
+        return dilate
 
     @staticmethod
     def normalize_countour(contour, ratio):
