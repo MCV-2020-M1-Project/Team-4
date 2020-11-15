@@ -183,7 +183,6 @@ class TextDetection(object):
         imgGeneral = TextDetection.text_detect_general(gray)
         imgBright = TextDetection.text_detect_bright(gray)
 
-
         areaImg = image.shape[0] * image.shape[1]
         ratio = image.shape[1] / resize.shape[1]
         retval, labels, stats, centroids = cv2.connectedComponentsWithStats(imgGeneral)
@@ -203,15 +202,15 @@ class TextDetection(object):
             actualStats = TextDetection.normalize_countour(stats1[label], ratio)
             x, y, w, h, area = actualStats
             if areaImg * 0.001 < area < areaImg * 0.4 and w > h * 2 and bestArea < area and \
-                    image.shape[0] * 0.25 < centroids1[label,0] < image.shape[0] * 0.75 :
+                    image.shape[0] * 0.1 < centroids1[label,0] < image.shape[0] * 0.75 :
                 bestArea = area
                 bestStats = actualStats
 
         if bestStats is not None:
             x, y, w, h, area = bestStats
             cv2.rectangle(image, (x,y), (x+w, y+h), (255, 0, 0), -1)
-            #plt.imshow(image, 'gray')
-            #plt.show()
+            plt.imshow(image, 'gray')
+            plt.show()
         else:
             return image
 
@@ -220,11 +219,12 @@ class TextDetection(object):
     @staticmethod
     def text_detect_bright(img):
         kernel = np.ones((10, 10), np.uint8)
-        kernel1, kernel2 = img.shape[0] // 20, img.shape[1] // 20
+        kernel1, kernel2 = img.shape[0] // 10, img.shape[1] // 10
         img_TH = cv2.morphologyEx(img, cv2.MORPH_TOPHAT, np.ones((kernel1, kernel2), np.uint8), iterations=2)
+        #img_TH = cv2.morphologyEx(img, cv2.MORPH_TOPHAT, np.ones((10, 10)))
         # Give extra margin
 
-        img_TH = img_TH[kernel1:img.shape[0] - kernel1, kernel2:img.shape[1] - kernel2]
+        #img_TH = img_TH[kernel1:img.shape[0] - kernel1, kernel2:img.shape[1] - kernel2]
 
         # Threshold adaptative 90%
 
@@ -232,21 +232,21 @@ class TextDetection(object):
 
         img_TH[(img_TH[:, :] < TH)] = 0
 
-        kernel1, kernel2 = 11, int(img.shape[1] // 2)
+        """kernel1, kernel2 = 11, int(img.shape[1] // 2)
         if kernel1 % 2 == 0:
             kernel1 += 1
         if kernel2 % 2 == 0:
-            kernel2 += 1
-        img_Thresh = cv2.morphologyEx(img_TH, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
-        img_Thresh = cv2.morphologyEx(img_Thresh, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+            kernel2 += 1"""
+        img_Thresh = cv2.morphologyEx(img_TH, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+        img_Thresh = cv2.morphologyEx(img_Thresh, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
         #img_TH = cv2.morphologyEx(img_Thresh, cv2.MORPH_TOPHAT, np.ones((kernel1, kernel2), np.uint8), iterations=2)
         #img_Thresh = cv2.morphologyEx(img_Thresh, cv2.MORPH_CLOSE, np.ones((kernel1, kernel2), np.uint8), borderValue=0)
         return img_Thresh
 
     @staticmethod
     def text_detect_general(img):
-        tophat = cv2.morphologyEx(img, cv2.MORPH_TOPHAT, np.ones((1, 10)), iterations=1)
-        blackhat = cv2.morphologyEx(tophat, cv2.MORPH_BLACKHAT, np.ones((5, 5)), iterations=10)
+        tophat = cv2.morphologyEx(img, cv2.MORPH_TOPHAT, np.ones((15, 15)), iterations=1)
+        blackhat = cv2.morphologyEx(tophat, cv2.MORPH_BLACKHAT, np.ones((30, 30)))
 
         thres = cv2.threshold(blackhat, 100, 255, cv2.THRESH_BINARY)[1]
 
