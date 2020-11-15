@@ -53,7 +53,10 @@ class Rotation(object):
 
         rot = np.mean(deg)
         if not math.isnan(rot):
-            return imutils.rotate_bound(image, 90 - rot), 90 - rot
+            if rot - 90 >= 0:
+                return imutils.rotate(image, rot - 90), rot - 90
+            else:
+                return imutils.rotate(image, rot - 90), 180 + (rot - 90)
 
         return image, 0
 

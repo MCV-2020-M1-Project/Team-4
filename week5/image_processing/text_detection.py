@@ -202,7 +202,8 @@ class TextDetection(object):
         for label in range(retval1):
             actualStats = TextDetection.normalize_countour(stats1[label], ratio)
             x, y, w, h, area = actualStats
-            if areaImg * 0.001 < area < areaImg * 0.3 and w > h * 2 and bestArea < area and image.shape[0] * 0.45 < centroids1[label,0] < image.shape[0] * 0.65:
+            if areaImg * 0.001 < area < areaImg * 0.4 and w > h * 2 and bestArea < area and \
+                    image.shape[0] * 0.25 < centroids1[label,0] < image.shape[0] * 0.75 :
                 bestArea = area
                 bestStats = actualStats
 
@@ -231,15 +232,15 @@ class TextDetection(object):
 
         img_TH[(img_TH[:, :] < TH)] = 0
 
-        kernel1, kernel2 = int(img.shape[0] // 15), int(img.shape[1] // 2)
+        kernel1, kernel2 = 11, int(img.shape[1] // 2)
         if kernel1 % 2 == 0:
             kernel1 += 1
         if kernel2 % 2 == 0:
             kernel2 += 1
         img_Thresh = cv2.morphologyEx(img_TH, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
         img_Thresh = cv2.morphologyEx(img_Thresh, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
-        img_TH = cv2.morphologyEx(img_Thresh, cv2.MORPH_TOPHAT, np.ones((kernel1, kernel2), np.uint8), iterations=2)
-        img_Thresh = cv2.morphologyEx(img_Thresh, cv2.MORPH_CLOSE, np.ones((kernel1, kernel2), np.uint8), borderValue=0)
+        #img_TH = cv2.morphologyEx(img_Thresh, cv2.MORPH_TOPHAT, np.ones((kernel1, kernel2), np.uint8), iterations=2)
+        #img_Thresh = cv2.morphologyEx(img_Thresh, cv2.MORPH_CLOSE, np.ones((kernel1, kernel2), np.uint8), borderValue=0)
         return img_Thresh
 
     @staticmethod
